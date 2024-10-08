@@ -91,4 +91,125 @@ if __name__ == '__main__':
             for t in tokens:
                 print(t.type+ " "+ t.value+ "  \n")
 
+class P1Parser(Parser):
+    tokens = Lexer.tokens
+    
+    def __init__(self):
+        pass
+
+    @_('')
+    def Input(self):
+        print("Cadena Aceptada")
+
+    @_('Input Line ";"')
+    def Input(self):
+        pass
+    
+    @_('Assign Operation')
+    def Line(self):
+        pass
+
+    @_('')
+    def Assign(self):
+        pass
+
+    @_('Assign ID "="')
+    def Assign(self):
+        pass
+
+    @_('andOp')
+    def orOp(self):
+        pass
+
+    @_('andOp AND Operation')
+    def orOp(self):
+        pass
+
+    @_('equalOp')
+    def andOp(self):
+        pass
+
+    @_('equalOp OR Operation')
+    def andOp(self):
+        pass
+    
+    @_('compOp')
+    def equalOp(self):
+        pass
+
+    @_('compOp equalSymbol Operation')
+    def equalOp(self):
+        pass
+
+    @_('unary')
+    def compOp(self):
+        pass
+
+    @_('unary compSymbol Operation')
+    def compOp(self):
+        pass
+
+    @_('EQUAL')
+    def equalSymbol(self):
+        pass
+
+    @_('NOT_EQ')
+    def equalSymbol(self):
+        pass
+
+    @_('LE_EQ')
+    def compSymbol(self):
+        pass
+
+    @_('GR_EQ')
+    def compSymbol(self):
+        pass
+
+    @_('prodOp "+" Operation')
+    def addOp(self):
+        pass
+
+    @_('prodOp "-" Operation')
+    def addOp(self):
+        pass
+
+    @_('prodOp')
+    def addOp(self):
+        pass
+
+    @_('unary "*" Operation')
+    def prodOp(self):
+        pass
+
+    @_('unary "/" Operation')
+    def prodOp(self):
+        pass
+
+    @_('unary')
+    def prodOP(self):
+        pass
+
+    @_('fact')
+    def unary(self):
+        pass
+
+    @_('"-" Operation')
+    def unary(self):
+        pass
+
+    @_('"!" Operation')
+    def unary(self):
+        pass
+
+    @_('ID')
+    def fact(self):
+        pass
+
+    @_('NUM')
+    def fact(self):
+        pass
+
+
+
+
 
