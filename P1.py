@@ -1,26 +1,26 @@
-#   tokens = {CONST,ID,INT}
+#   tokens = {CONST,ID,NUM}
 #   literals = {'=','==','<=','>=','!=','&&','||','!','+','-','*','/',';'}
-
 #   
 #   Input -> empty | Input Line ';' 
 #   Line  -> Assign Operation
-#   Operation -> '(' Operation ')' | addOp | equalOp
+#   Operation -> orOp | '(' Operation ')'
 #
 #   Assign -> empty | Assign ID '='
 #
-#   equalOp -> compOp | compOp equalSymbol Operation
-#   compOp -> unary | unary compSymbol Operation
+#   orOp -> andOp | andOp '&&' orOp
+#   andOp -> equalOp | equalOp '||' andOp
+#   equalOp -> compOp | compOp equalSymbol equalOp
+#   compOp -> addOp | addOp compSymbol compOp
 #
-#   compSymbol -> '>=' | '<='
 #   equalSymbol -> '==' | '!='
+#   compSymbol -> '>=' | '<='
 #
-#   
-#   addOp -> prodOp '+' Operation
-#   addOp -> prodOp '-' Operation
+#   addOp -> prodOp '+' addOp
+#   addOp -> prodOp '-' addOp
 #   addOp -> prodOp
 #
-#   prodOp -> unary '*' Operation
-#   prodOp -> unary '/' Operation
+#   prodOp -> unary '*' prodOp
+#   prodOp -> unary '/' prodOp
 #   prodOp -> unary
 #   
 #   unary -> fact | '!' Operation | '-' Operation
@@ -32,11 +32,11 @@ from sly import Lexer,Parser
 import os, sys
 
 
-class calcLexer(Lexer):
+class P1Lexer(Lexer):
 
-    tokens = {ID,NUM,EQUAL,LE_EQ, GR_EQ, NOT_EQ, AND, OR}
+    tokens = {ID,NUM,EQUAL,LE_EQ, GR_EQ, NOT_EQ, AND, OR, ERROR}
 
-    literals = {'=','!','+','-','*','/',';'}
+    literals = {'=','!','+','-','*','/',';','(',')'}
     ignore = r' \t'
     ignore_newline = r'\n+'
 
@@ -64,152 +64,149 @@ class calcLexer(Lexer):
         print('Line %d: Bad character %r' % (self.lineno, t.value[0]))
         self.index +=1
 
-
-
-
-if __name__ == '__main__':
-   
-    lexer = calcLexer()
-
-    inputs = ""
-    with open(os.path.join(sys.path[0], "prueba.c"), "r") as file:
-        inputs = file.read()
-    tokens = lexer.tokenize(inputs)
-    print(inputs)
-
-    for t in tokens:
-        print(t.type + " " + t.value + "\n")
-
-
-    while True:
-        try:
-            text = input('buenas > ')
-        except EOFError:
-            break
-        if text:
-            tokens = lexer.tokenize(text)
-            for t in tokens:
-                print(t.type+ " "+ t.value+ "  \n")
-
 class P1Parser(Parser):
-    tokens = Lexer.tokens
+    tokens = P1Lexer.tokens
     
     def __init__(self):
         pass
 
     @_('')
-    def Input(self):
-        print("Cadena Aceptada")
+    def Input(self,p):
+        print("\nCadena Aceptada\n")
 
     @_('Input Line ";"')
-    def Input(self):
+    def Input(self,p):
         pass
     
     @_('Assign Operation')
-    def Line(self):
+    def Line(self,p):
+        pass
+
+    @_('"(" Operation ")"')
+    def Operation(self,p):
+        pass
+
+    @_('orOp')
+    def Operation(self,p):
         pass
 
     @_('')
-    def Assign(self):
+    def Assign(self,p):
         pass
 
     @_('Assign ID "="')
-    def Assign(self):
+    def Assign(self,p):
         pass
 
     @_('andOp')
-    def orOp(self):
+    def orOp(self,p):
         pass
 
-    @_('andOp AND Operation')
-    def orOp(self):
+    @_('andOp AND orOp')
+    def orOp(self,p):
         pass
 
     @_('equalOp')
-    def andOp(self):
+    def andOp(self,p):
         pass
 
-    @_('equalOp OR Operation')
-    def andOp(self):
+    @_('equalOp OR andOp')
+    def andOp(self,p):
         pass
     
     @_('compOp')
-    def equalOp(self):
+    def equalOp(self,p):
         pass
 
-    @_('compOp equalSymbol Operation')
-    def equalOp(self):
+    @_('compOp equalSymbol equalOp')
+    def equalOp(self,p):
         pass
 
-    @_('unary')
-    def compOp(self):
+    @_('addOp')
+    def compOp(self,p):
         pass
 
-    @_('unary compSymbol Operation')
-    def compOp(self):
+    @_('addOp compSymbol compOp')
+    def compOp(self,p):
         pass
 
     @_('EQUAL')
-    def equalSymbol(self):
+    def equalSymbol(self,p):
         pass
 
     @_('NOT_EQ')
-    def equalSymbol(self):
+    def equalSymbol(self,p):
         pass
 
     @_('LE_EQ')
-    def compSymbol(self):
+    def compSymbol(self,p):
         pass
 
     @_('GR_EQ')
-    def compSymbol(self):
+    def compSymbol(self,p):
         pass
 
     @_('prodOp "+" Operation')
-    def addOp(self):
+    def addOp(self,p):
         pass
 
     @_('prodOp "-" Operation')
-    def addOp(self):
+    def addOp(self,p):
         pass
 
     @_('prodOp')
-    def addOp(self):
+    def addOp(self,p):
         pass
 
     @_('unary "*" Operation')
-    def prodOp(self):
+    def prodOp(self,p):
         pass
 
     @_('unary "/" Operation')
-    def prodOp(self):
+    def prodOp(self,p):
         pass
 
     @_('unary')
-    def prodOP(self):
+    def prodOp(self,p):
         pass
 
     @_('fact')
-    def unary(self):
+    def unary(self,p):
         pass
 
     @_('"-" Operation')
-    def unary(self):
+    def unary(self,p):
         pass
 
     @_('"!" Operation')
-    def unary(self):
+    def unary(self,p):
         pass
 
     @_('ID')
-    def fact(self):
+    def fact(self,p):
         pass
 
     @_('NUM')
-    def fact(self):
+    def fact(self,p):
         pass
 
+if __name__ == '__main__':
+   
+    lexer = P1Lexer()
+    parser = P1Parser()
+    
+    with open(os.path.join(sys.path[0], "prueba.c"), "r") as file:
+        inputs = file.read()
+    tokens = lexer.tokenize(inputs)
+    parser.parse(tokens)
 
-
-
-
+#    while True:
+#        try:
+#            text = input('buenas > ')
+#        except EOFError:
+#            break
+#        if text:
+#            tokens = lexer.tokenize(text)
+#            parser.parse(tokens)
+#            for t in tokens:
+#                print(t.type+ " "+ t.value+ "  \n")
