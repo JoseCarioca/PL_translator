@@ -1,16 +1,13 @@
-#   tokens = {CONST,ID,NUM}
-#   literals = {'=','==','<=','>=','!=','&&','||','!','+','-','*','/',';'}
+#   tokens = {ID,NUM,EQUAL,LE_EQ, GR_EQ, NOT_EQ, AND, OR }
+#   literals = {'=','!','+','-','*','/',';','(',')'}
 #   
 #   Input -> empty | Input Line ';' 
 #   Line  -> Assign Operation
-#   **Operation -> orOp | '(' Operation ')'# desaparece
 #
 #   Assign -> empty | Assign ID '='
 #
-#   **orOp -> andOp | andOp '&&' orOp   # esto seria al reves '||' si && tiene precedencia o sea que va 'mas abajo'
-#   (Operation -> andOp | andOp '||' Operation)
-#   **andOp -> equalOp | equalOp '||' andOp # no? '&&'
-#   (andOp -> equalOp | equalOp '&&' andOp)
+#   Operation -> andOp | andOp '||' Operation
+#   andOp -> equalOp | equalOp '&&' andOp
 #   equalOp -> compOp | compOp equalSymbol equalOp
 #   compOp -> addOp | addOp compSymbol compOp
 #
@@ -23,11 +20,7 @@
 #
 #   prodOp -> unary '*' prodOp
 #   prodOp -> unary '/' prodOp
-# (unary es fact)
-#   
-#   **unary -> fact | '!' Operation | '-' Operation #esto permite --fact
-#   **fact -> ID | NUM
-
+#
 #   fact -> ID | NUM | '!' fact | '-'fact | '(' Operation ')'
 #  
 
