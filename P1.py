@@ -38,7 +38,7 @@ import os, sys
 
 class P1Lexer(Lexer):
 
-    tokens = {ID,NUM,EQUAL,LE_EQ, GR_EQ, NOT_EQ, AND, OR } #, ERROR 
+    tokens = {ID,NUM,EQUAL,LE_EQ, GR_EQ, NOT_EQ, AND, OR } 
 
     literals = {'=','!','+','-','*','/',';','(',')'}
     ignore = r' \t'
@@ -77,6 +77,15 @@ class P1Parser(Parser):
     
     def __init__(self):
         pass
+
+    def error(self, t):
+        print("\nCadena no Aceptada\n")
+        
+        tok = next(self.tokens, None)
+        while tok:
+            tok = next(self.tokens, None)
+
+        return tok
 
     @_('')
     def Input(self,p):
