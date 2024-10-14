@@ -18,8 +18,8 @@
 #   addOp -> prodOp '-' addOp
 #   addOp -> prodOp
 #
-#   prodOp -> unary '*' prodOp
-#   prodOp -> unary '/' prodOp
+#   prodOp -> fact '*' prodOp
+#   prodOp -> fact '/' prodOp
 #
 #   fact -> ID | NUM | '!' fact | '-'fact | '(' Operation ')'
 #  
@@ -66,23 +66,25 @@ class P1Lexer(Lexer):
         self.index +=1
 
 class P1Parser(Parser):
+
     tokens = P1Lexer.tokens
-    
+
     def __init__(self):
-        pass
+        self.ErrorFlag = False 
+    
 
     def error(self, t):
+        self.ErrorFlag = True
         print("\nCadena no Aceptada\n")
-        
         tok = next(self.tokens, None)
         while tok:
             tok = next(self.tokens, None)
-
+        
         return tok
 
     @_('')
     def Input(self,p):
-        print("\nCadena Aceptada\n")
+        pass
 
     @_('Input Line ";"')
     def Input(self,p):
@@ -91,14 +93,6 @@ class P1Parser(Parser):
     @_('Assign Operation')
     def Line(self,p):
         pass
-
-    # @_('"(" Operation ")"')
-    # def Operation(self,p):
-    #     pass
-
-    # @_('orOp')
-    # def Operation(self,p):
-    #     pass
 
     @_('')
     def Assign(self,p):
@@ -180,10 +174,6 @@ class P1Parser(Parser):
     def prodOp(self,p):
         pass
 
-    # @_('fact')
-    # def unary(self,p):
-    #     pass
-
     @_('"-" fact')
     def fact(self,p):
         pass
@@ -215,6 +205,10 @@ if __name__ == '__main__':
     parser.parse(tokens)
     for tok in tokens:
         print(tok)
+    #Si el flag se mantuvo en 'False' la cadena fue aceptada
+    if not parser.ErrorFlag:
+        print("Cadena Aceptada")
+
 
 #    while True:
 #        try:
