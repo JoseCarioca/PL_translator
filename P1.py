@@ -3,12 +3,14 @@
 #   
 #   Input -> empty | Input Line ';' 
 #   Line  -> Assign Operation
-#   Operation -> orOp | '(' Operation ')'
+#   **Operation -> orOp | '(' Operation ')'# desaparece
 #
 #   Assign -> empty | Assign ID '='
 #
-#   orOp -> andOp | andOp '&&' orOp
-#   andOp -> equalOp | equalOp '||' andOp
+#   **orOp -> andOp | andOp '&&' orOp   # esto seria al reves '||' si && tiene precedencia o sea que va 'mas abajo'
+#   (Operation -> andOp | andOp '||' Operation)
+#   **andOp -> equalOp | equalOp '||' andOp # no? '&&'
+#   (andOp -> equalOp | equalOp '&&' andOp)
 #   equalOp -> compOp | compOp equalSymbol equalOp
 #   compOp -> addOp | addOp compSymbol compOp
 #
@@ -21,11 +23,13 @@
 #
 #   prodOp -> unary '*' prodOp
 #   prodOp -> unary '/' prodOp
-#   prodOp -> unary
+# (unary es fact)
 #   
-#   unary -> fact | '!' Operation | '-' Operation
-#
-#   fact -> ID | NUM
+#   **unary -> fact | '!' Operation | '-' Operation #esto permite --fact
+#   **fact -> ID | NUM
+
+#   fact -> ID | NUM | '!' fact | '-'fact | '(' Operation ')'
+#  
 
 
 from sly import Lexer,Parser
@@ -34,7 +38,7 @@ import os, sys
 
 class P1Lexer(Lexer):
 
-    tokens = {ID,NUM,EQUAL,LE_EQ, GR_EQ, NOT_EQ, AND, OR, ERROR}
+    tokens = {ID,NUM,EQUAL,LE_EQ, GR_EQ, NOT_EQ, AND, OR } #, ERROR 
 
     literals = {'=','!','+','-','*','/',';','(',')'}
     ignore = r' \t'
@@ -55,10 +59,14 @@ class P1Lexer(Lexer):
         #t.value = t.value
         return t
     
-    #line number traking?
+    
     @_(r'\n+')
     def ignore_newline(self, t):
-        self.lineno
+        self.lineno += t.value.count('\n')
+
+    @_(r'//.*')
+    def ignoreComment( self, t ):
+        pass
     
     def error(self,t):
         print('Line %d: Bad character %r' % (self.lineno, t.value[0]))
@@ -82,13 +90,13 @@ class P1Parser(Parser):
     def Line(self,p):
         pass
 
-    @_('"(" Operation ")"')
-    def Operation(self,p):
-        pass
+    # @_('"(" Operation ")"')
+    # def Operation(self,p):
+    #     pass
 
-    @_('orOp')
-    def Operation(self,p):
-        pass
+    # @_('orOp')
+    # def Operation(self,p):
+    #     pass
 
     @_('')
     def Assign(self,p):
@@ -99,18 +107,18 @@ class P1Parser(Parser):
         pass
 
     @_('andOp')
-    def orOp(self,p):
+    def Operation(self,p):
         pass
 
-    @_('andOp AND orOp')
-    def orOp(self,p):
+    @_('andOp OR Operation')
+    def Operation(self,p):
         pass
 
     @_('equalOp')
     def andOp(self,p):
         pass
 
-    @_('equalOp OR andOp')
+    @_('equalOp AND andOp')
     def andOp(self,p):
         pass
     
@@ -146,11 +154,11 @@ class P1Parser(Parser):
     def compSymbol(self,p):
         pass
 
-    @_('prodOp "+" Operation')
+    @_('prodOp "+" addOp')
     def addOp(self,p):
         pass
 
-    @_('prodOp "-" Operation')
+    @_('prodOp "-" addOp')
     def addOp(self,p):
         pass
 
@@ -158,28 +166,32 @@ class P1Parser(Parser):
     def addOp(self,p):
         pass
 
-    @_('unary "*" Operation')
+    @_('fact "*" prodOp')
     def prodOp(self,p):
         pass
 
-    @_('unary "/" Operation')
-    def prodOp(self,p):
-        pass
-
-    @_('unary')
+    @_('fact "/" prodOp')
     def prodOp(self,p):
         pass
 
     @_('fact')
-    def unary(self,p):
+    def prodOp(self,p):
         pass
 
-    @_('"-" Operation')
-    def unary(self,p):
+    # @_('fact')
+    # def unary(self,p):
+    #     pass
+
+    @_('"-" fact')
+    def fact(self,p):
         pass
 
-    @_('"!" Operation')
-    def unary(self,p):
+    @_('"!" fact')
+    def fact(self,p):
+        pass
+
+    @_('"(" Operation ")"')
+    def fact(self,p):
         pass
 
     @_('ID')
@@ -199,6 +211,8 @@ if __name__ == '__main__':
         inputs = file.read()
     tokens = lexer.tokenize(inputs)
     parser.parse(tokens)
+    for tok in tokens:
+        print(tok)
 
 #    while True:
 #        try:
