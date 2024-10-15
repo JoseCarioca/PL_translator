@@ -163,7 +163,7 @@ class P1Parser(Parser):
 
     @_('equalOp AND andOp')
     def andOp(self,p):
-        return p.equalOp or p.andOp
+        return p.equalOp and p.andOp
     
     @_('compOp')
     def equalOp(self,p):
@@ -263,7 +263,7 @@ if __name__ == '__main__':
     if not parser.ErrorFlag:
         print("\nCadena Aceptada\n")
         for var,value in parser.Variables.items():
-            print(var+" = "+value+"\n")
+            print(var+" = "+str(value)+"\n")
 
 
 #    while True:
