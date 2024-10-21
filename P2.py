@@ -1,9 +1,12 @@
 #   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT }
 #   literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' }
 #   
+
+#   ** (input pasa a funccion) **
+#   funcion -> funcion TIPO ID '(' variables')' '{' Input '}'
 #   Input -> empty | Input Line ';' 
 #   Line  -> Declaracion | Assign Operation
-#
+#   
 #   Declaracion -> Declaracion2 Declaracion3
 #   Declaracion2 -> TIPO | Declaracion2 Declaracion3 ','
 #   Declaracion3 -> ID | ID '=' Operation
@@ -27,7 +30,10 @@
 #   prodOp -> fact '/' prodOp
 #
 #   fact -> ID | NUM | '!' fact | '-'fact | '(' Operation ')'
-#  
+#   listavars -> var | var Tipo ID
+#   variables -> empty | listavars
+#   listavars -> listavars ',' TIPO ID | TIPO ID
+# 
 
 
 from sly import Lexer,Parser
@@ -37,7 +43,7 @@ class P1Lexer(Lexer):
 
     tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT } 
 
-    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' }
+    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}'}
     ignore = r' \t'
     ignore_newline = r'\n+'
 
@@ -88,6 +94,15 @@ class P1Parser(Parser):
             tok = next(self.tokens, None)
         
         return tok
+
+
+    @_('')
+    def funcion(self,p):
+        pass
+
+    @_('funcion TIPO ID "(" variables ")" "{" Input "}" ')
+    def funcion(self,p):
+        pass
 
     # Concatenación de Instrucciones
     @_('')
@@ -238,6 +253,22 @@ class P1Parser(Parser):
     @_('"(" Operation ")"')
     def fact(self,p):
         return p.Operation
+
+    @_('')
+    def variables(self,p):
+        pass
+
+    @_('listavars')
+    def variables(self,p):
+        pass
+
+    @_('TIPO ID')
+    def listavars(self,p):
+        pass
+
+    @_('listavars "," TIPO ID')
+    def listavars(self,p):
+        pass
 
     @_('ID')
     def fact(self,p):
