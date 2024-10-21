@@ -2,7 +2,7 @@
 #   literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' }
 #   
 
-#   ** (input pasa a funccion) **
+#  
 #   funcion -> funcion TIPO ID '(' variables')' '{' Input '}'
 #   Input -> empty | Input Line ';' 
 #   Line  -> Declaracion | Assign Operation
@@ -77,7 +77,7 @@ class P1Lexer(Lexer):
         self.index +=1
 
 class P1Parser(Parser):
-
+    debugfile = "parse.out"
     tokens = P1Lexer.tokens
 
     # Constructor
@@ -95,7 +95,7 @@ class P1Parser(Parser):
         
         return tok
 
-
+    # concatenacion de funciones
     @_('')
     def funcion(self,p):
         pass
