@@ -35,7 +35,6 @@
 #   listavars -> listavars ',' TIPO ID | TIPO ID
 # 
 
-
 from sly import Lexer,Parser
 import os, sys
 
@@ -285,8 +284,11 @@ if __name__ == '__main__':
    
     lexer = P1Lexer()
     parser = P1Parser()
-    
-    with open(os.path.join(sys.path[0], "prueba.c"), "r") as file:
+    fichero = input('escribe nombre del archivo (ejemplo: hola.c) > ')
+    if not fichero: #si esta vacio
+        fichero = "prueba.c"
+
+    with open(os.path.join(sys.path[0], fichero), "r") as file:
         inputs = file.read()
     tokens = lexer.tokenize(inputs)
     parser.parse(tokens)
