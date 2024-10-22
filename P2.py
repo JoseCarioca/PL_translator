@@ -2,15 +2,16 @@
 #   literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' }
 #   
 
-#  
-#   funcion -> funcion TIPO ID '(' variables')' '{' Input '}'
+#   #Global -> Global Declaracion ';' | Global Funcion | Declaracion ';' | Funcion ';'
+#   Funcion ->  TIPO ID '(' variables')' '{' Input RETURN Operation ';' '}'
+#   Funcion ->  VOID ID '(' variables')' '{' Input '}'
 #   Input -> empty | Input Line ';' 
 #   Line  -> Declaracion | Assign Operation
-#   
 #   Declaracion -> Declaracion2 Declaracion3
 #   Declaracion2 -> TIPO | Declaracion2 Declaracion3 ','
 #   Declaracion3 -> ID | ID '=' Operation
 #   TIPO -> INT
+
 #
 #   Assign -> empty | Assign ID '='
 #
@@ -28,6 +29,7 @@
 #
 #   prodOp -> fact '*' prodOp
 #   prodOp -> fact '/' prodOp
+#   prodOp -> fact
 #
 #   fact -> ID | NUM | '!' fact | '-'fact | '(' Operation ')'
 #   listavars -> var | var Tipo ID
@@ -40,7 +42,7 @@ import os, sys
 
 class P1Lexer(Lexer):
 
-    tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT } 
+    tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN} 
 
     literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}'}
     ignore = r' \t'
@@ -48,6 +50,8 @@ class P1Lexer(Lexer):
 
     NUM = r'\d+'
     INT = r'int'
+    VOID = r'void'
+    RETURN = r'return'
     ID = r'[a-zA-Z_][a-zA-Z0-9_]*'
     EQUAL = r'=='
     LE_EQ = r'<='
@@ -95,12 +99,29 @@ class P1Parser(Parser):
         return tok
 
     # concatenacion de funciones
-    @_('')
-    def funcion(self,p):
+    @_('Declaracion')
+    def Global(self,p):
+        print(p.Global)
+
+    @_('Funcion')
+    def Global(self,p):
         pass
 
-    @_('funcion TIPO ID "(" variables ")" "{" Input "}" ')
-    def funcion(self,p):
+    @_('Global Declaracion')
+    def Global(self,p):
+        pass
+
+    @_('Global Funcion')
+    def Global(self,p):
+        pass
+
+
+    @_('TIPO ID "(" variables ")" "{" Input RETURN Operation ";" "}"  ')
+    def Funcion(self,p):
+        pass
+
+    @_('VOID ID "(" variables ")" "{" Input "}" ')
+    def Funcion(self,p):
         pass
 
     # Concatenación de Instrucciones
@@ -148,6 +169,8 @@ class P1Parser(Parser):
             print("Variable \""+p.ID+"\" no puede ser declarada mas de una vez.")
             self.ErrorFlag = True
         self.Variables[p.ID] = p.Operation
+
+    #Tipos para funciones y variables
 
     @_('INT')
     def TIPO(self,p):
@@ -279,6 +302,8 @@ class P1Parser(Parser):
     @_('NUM')
     def fact(self,p):
         return int(p.NUM)
+    
+    
 
 if __name__ == '__main__':
    

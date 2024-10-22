@@ -5,5 +5,13 @@ int main(int args){
     b >= a != b; 
     (0 || 1 && 0);
     c = -5;
-    int h, l, p, q;
+    int h, l, p = 3, q = p;
+    return h;
 }
+
+void funcion(int jaja)
+{
+    c = -2;
+}
+
+
