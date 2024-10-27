@@ -42,9 +42,9 @@ import os, sys
 
 class P1Lexer(Lexer):
 
-    tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN} 
+    tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA} 
 
-    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}', '"'}
+    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}'}
     ignore = r' \t'
     ignore_newline = r'\n+'
 
@@ -52,6 +52,7 @@ class P1Lexer(Lexer):
     INT = r'int'
     VOID = r'void'
     RETURN = r'return'
+    PRINTF = r'printf'
     ID = r'[a-zA-Z_][a-zA-Z0-9_]*'
     EQUAL = r'=='
     LE_EQ = r'<='
@@ -59,6 +60,7 @@ class P1Lexer(Lexer):
     NOT_EQ = r'!='
     AND = r'&&'
     OR = r'\|\|'
+    CADENA = r'\".*\"'
     
 
     @_(r'\d+')
@@ -118,13 +120,14 @@ class P1Parser(Parser):
 
     @_('TIPO ID "(" variables ")" "{" Input RETURN Operation ";" "}"  ')
     def Funcion(self,p):
-        for var in p.Input:
-            if (var,p.ID) in self.Variables.keys():
-                print("No puedes declarar variables con el mismo nombre en el mismo ámbito.")
-                self.ErrorFlag = True
-            else:
-                self.Variables[(var,p.ID)] = None
-        
+        if p.Input != None:
+            for var in p.Input:
+                if (var,p.ID) in self.Variables.keys():
+                    print("No puedes declarar variables con el mismo nombre en el mismo ámbito.")
+                    self.ErrorFlag = True
+                else:
+                    self.Variables[(var,p.ID)] = None
+            
         if p.ID in self.Funciones.keys():
             print("No puedes declarar funciones con el mismo nombre.")
             self.ErrorFlag = True
@@ -133,13 +136,14 @@ class P1Parser(Parser):
 
     @_('VOID ID "(" variables ")" "{" Input "}" ')
     def Funcion(self,p):
-        for var in p.Input:
-            if (var,p.ID) in self.Variables.keys():
-                print("No puedes declarar variables con el mismo nombre en el mismo ámbito.")
-                self.ErrorFlag = True
-            else:
-                self.Variables[(var,p.ID)] = None
-        
+        if p.Input != None:
+            for var in p.Input:
+                if (var,p.ID) in self.Variables.keys():
+                    print("No puedes declarar variables con el mismo nombre en el mismo ámbito.")
+                    self.ErrorFlag = True
+                else:
+                    self.Variables[(var,p.ID)] = None
+            
         if p.ID in self.Funciones.keys():
             print("No puedes declarar funciones con el mismo nombre.")
             self.ErrorFlag = True
@@ -153,7 +157,12 @@ class P1Parser(Parser):
 
     @_('Input Line ";"')
     def Input(self,p):
-        return p.Line
+        if p.Line != None and p.Input != None:
+            return p.Input+p.Line
+        elif p.Line != None:
+            return p.Line
+        elif p.Input != None:
+            return p.Input
     
     # Tipos de Instrucciones
     @_('Assign Operation')
@@ -163,6 +172,10 @@ class P1Parser(Parser):
     @_('Declaracion')
     def Line(self,p):
         return p.Declaracion
+    
+    @_('PRINTF "(" CADENA ")"')
+    def Line(self,p):
+        pass
 
     # Declaraciones
     @_('Declaracion2 Declaracion3')
