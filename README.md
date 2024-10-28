@@ -3,6 +3,17 @@ Instrucciones de uso:
 al mismo nivel de ruta que el programa. Si no se proporciona ningun fichero, P2.py buscará el fichero "pruebas.c" (opcion por defecto)
 -Se pueden probar otros dos ficheros de ejemplo llamados "prueba_vacia.c" y "prueba_error.c" o ¡escriba el suyo propio!
 
+Cambios respecto a la P2:
+- Se añadieron funciones globales
+- Se modifico la regla de funciones
+- Se añadio una regla TIPO_ID -> TIPO ID
+- Se modificaron las declaraciones
+- La estructura donde se almacenan las variables ha sido modificada y ahora es un diccionario donde el key es (ID,Ambito) y su valor None
+
+Decisiones de la P3:
+- La estructura para almacenar las funciones es un diccionario donde el key es la ID y los valores son TIPO a devolver y parametros de entrada
+- Se pueden declarar variables globales tanto al principio como al final como entre funciones
+- El main siempre esta
 
 Los tokens:
 - tokens = {ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR }
