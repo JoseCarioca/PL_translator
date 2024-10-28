@@ -13,7 +13,7 @@ Cambios respecto a la P2:
 Decisiones de la P3:
 - La estructura para almacenar las funciones es un diccionario donde el key es la ID y los valores son TIPO a devolver y parametros de entrada
 - Se pueden declarar variables globales tanto al principio como al final como entre funciones
-- El main siempre esta
+- El main puede estar en cualquier sitio
 
 Los tokens:
 - tokens = {ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR }
