@@ -1,9 +1,10 @@
 #   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA } 
 #   literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' }
 #   
+#   Global -> empty | Global Declaracion ';' | Global Funcion
 #
-#  
-#   funcion -> funcion TIPO ID '(' variables')' '{' Input '}'
+#   Funcion -> TIPO_ID '(' variables ')' '{' Input RETURN Operation ';' '}'
+#   Funcion -> VOID ID '(' variables ')' '{' Input '}'
 #
 #   variables -> empty | listavars
 #   listavars -> listavars ',' TIPO ID | TIPO ID
@@ -11,9 +12,10 @@
 #   Input -> empty | Input Line ';' 
 #   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ')'
 #   
-#   Declaracion -> Declaracion2 Declaracion3
-#   Declaracion2 -> TIPO | Declaracion2 Declaracion3 ','
+#   Declaracion -> TIPO_ID | TIPO_ID '=' Operation | Declaracion2 Declaracion3
+#   Declaracion2 -> TIPO_ID ',' | TIPO_ID '=' Operation ',' | Declaracion2 Declaracion3 ','
 #   Declaracion3 -> ID | ID '=' Operation
+#   TIPO_ID -> TIPO ID
 #   TIPO -> INT
 #
 #   Assign -> empty | Assign ID '='
@@ -87,6 +89,7 @@ class P1Parser(Parser):
     # Constructor
     def __init__(self):
         self.ErrorFlag = False 
+        self.has_main = False
         self.Variables = {}
         self.Funciones = {}
     
@@ -118,30 +121,32 @@ class P1Parser(Parser):
     def Global(self,p):
         pass
 
-    @_('TIPO ID "(" variables ")" "{" Input RETURN Operation ";" "}" ')
+    @_('TIPO_ID "(" variables ")" "{" Input RETURN Operation ";" "}"')
     def Funcion(self,p):
         if p.variables != None:
             for var in p.variables:
-                if(var,p.ID) in self.Variables.keys():
-                    print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
+                if(var,p.TIPO_ID[1]) in self.Variables.keys():
+                    print("variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
                     self.ErrorFlag = True
                 else:
-                    self.Variables[(var,p.ID)] = None
+                    self.Variables[(var,p.TIPO_ID[1])] = None
+        if p.TIPO_ID[1] =="main":
+            self.has_main = True
         if p.Input != None:
             for var in p.Input:
-                if (var,p.ID) in self.Variables.keys():
-                    print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
+                if (var,p.TIPO_ID[1]) in self.Variables.keys():
+                    print("variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
                     self.ErrorFlag = True
                 else:
-                    self.Variables[(var,p.ID)] = None
+                    self.Variables[(var,p.TIPO_ID[1])] = None
             
-        if p.ID in self.Funciones.keys():
+        if p.TIPO_ID[1] in self.Funciones.keys():
             print("No puedes declarar funciones con el mismo nombre.")
             self.ErrorFlag = True
         else:
-            self.Funciones[p.ID] = (p.variables,"int")
+            self.Funciones[p.TIPO_ID[1]] = (p.variables,p.TIPO_ID[0])
 
-    @_('VOID ID "(" variables ")" "{" Input "}" ')
+    @_('VOID ID "(" variables ")" "{" Input "}"')
     def Funcion(self,p):
         if p.variables != None:
             for var in p.variables:
@@ -150,11 +155,12 @@ class P1Parser(Parser):
                     self.ErrorFlag = True
                 else:
                     self.Variables[(var,p.ID)] = None
+        if p.ID =="main":
+            self.has_main = True
         if p.Input != None:
             for var in p.Input:
                 if (var,p.ID) in self.Variables.keys():
                     print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
-                
                     self.ErrorFlag = True
                 else:
                     self.Variables[(var,p.ID)] = None
@@ -195,21 +201,27 @@ class P1Parser(Parser):
     # Declaraciones
     @_('Declaracion2 Declaracion3')
     def Declaracion(self,p):
-        if p.Declaracion2 != "int":
-            return p.Declaracion2+p.Declaracion3
-        else:
-            return p.Declaracion3
+        return p.Declaracion2+p.Declaracion3
+        
+    @_('TIPO_ID')
+    def Declaracion(self,p):
+        return [p.TIPO_ID[1]]
+    
+    @_('TIPO_ID "=" Operation')
+    def Declaracion(self,p):
+        return [p.TIPO_ID[1]]
 
-    @_('TIPO')
+    @_('TIPO_ID "=" Operation ","')
     def Declaracion2(self,p):
-        return p.TIPO
+        return [p.TIPO_ID[1]]
+    
+    @_('TIPO_ID ","')
+    def Declaracion2(self,p):
+        return [p.TIPO_ID[1]]
 
     @_('Declaracion2 Declaracion3 ","')
     def Declaracion2(self,p):
-        if p.Declaracion2 != "int":
-            return p.Declaracion2+p.Declaracion3
-        else:
-            return p.Declaracion3
+        return p.Declaracion2+p.Declaracion3
 
     @_('ID')
     def Declaracion3(self,p):
@@ -218,6 +230,10 @@ class P1Parser(Parser):
     @_('ID "=" Operation')
     def Declaracion3(self,p):
         return [p.ID]
+    
+    @_('TIPO ID')
+    def TIPO_ID(self,p):
+        return (p.TIPO,p.ID)
 
     @_('INT')
     def TIPO(self,p):
@@ -323,7 +339,6 @@ class P1Parser(Parser):
 
     @_('listavars')
     def variables(self,p):
-        #
         return p.listavars
 
     @_('TIPO ID')
@@ -349,6 +364,12 @@ class P1Parser(Parser):
     @_('ID "(" listavars ")"')
     def fcall(self,p):
         pass
+
+    def parse(self, data):
+        super().parse(data)
+        if not self.has_main:
+            print("Error: No se encontró la función main")
+            self.ErrorFlag = True
 
 if __name__ == '__main__':
    
