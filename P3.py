@@ -120,10 +120,17 @@ class P1Parser(Parser):
 
     @_('TIPO ID "(" variables ")" "{" Input RETURN Operation ";" "}" ')
     def Funcion(self,p):
+        if p.variables != None:
+            for var in p.variables:
+                if(var,p.ID) in self.Variables.keys():
+                    print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
+                    self.ErrorFlag = True
+                else:
+                    self.Variables[(var,p.ID)] = None
         if p.Input != None:
             for var in p.Input:
                 if (var,p.ID) in self.Variables.keys():
-                    print("No puedes declarar variables con el mismo nombre en el mismo ámbito.")
+                    print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
                     self.ErrorFlag = True
                 else:
                     self.Variables[(var,p.ID)] = None
@@ -136,10 +143,18 @@ class P1Parser(Parser):
 
     @_('VOID ID "(" variables ")" "{" Input "}" ')
     def Funcion(self,p):
+        if p.variables != None:
+            for var in p.variables:
+                if(var,p.ID) in self.Variables.keys():
+                    print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
+                    self.ErrorFlag = True
+                else:
+                    self.Variables[(var,p.ID)] = None
         if p.Input != None:
             for var in p.Input:
                 if (var,p.ID) in self.Variables.keys():
-                    print("No puedes declarar variables con el mismo nombre en el mismo ámbito.")
+                    print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
+                
                     self.ErrorFlag = True
                 else:
                     self.Variables[(var,p.ID)] = None
@@ -308,6 +323,7 @@ class P1Parser(Parser):
 
     @_('listavars')
     def variables(self,p):
+        #
         return p.listavars
 
     @_('TIPO ID')

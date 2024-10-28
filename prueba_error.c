@@ -1,6 +1,12 @@
 //Este fichero no se reconocerá como cadena válida
-//la gramatica no acepta instrucciones fuera de una funcion.
-a = 3;
-int main {
-    a;
+int g2;
+int main(){
+   int a = 2;
+   return 0;
+}
+int g;
+void hola(int c) 
+{
+    int c = 5; //re declaracion 
+    return 0; //void 
 }

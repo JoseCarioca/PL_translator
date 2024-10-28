@@ -8,6 +8,6 @@ int main(){
     return a;
 }
 
-void fun(int a, int c){
-    int a;
+void fun(int a, int c, int c){
+    int b; //int c daria error
 }
