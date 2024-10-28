@@ -1,4 +1,5 @@
 
+//variables globales
 
 int main(){
     int a = 1 || 0;
@@ -8,6 +9,6 @@ int main(){
     return a;
 }
 
-void fun(int a, int c, int c){
+void fun(int a, int c){
     int b; //int c daria error
 }

@@ -9,11 +9,14 @@ Cambios respecto a la P2:
 - Se añadio una regla TIPO_ID -> TIPO ID
 - Se modificaron las declaraciones
 - La estructura donde se almacenan las variables ha sido modificada y ahora es un diccionario donde el key es (ID,Ambito) y su valor None
+- Se han añadido mensajes de error referente a las redeclaraciones y la necesidad del main
 
 Decisiones de la P3:
+- las funciones se separan en dos tipos (que devuelvan o no un valor) y esto se refleja en las reglas 
 - La estructura para almacenar las funciones es un diccionario donde el key es la ID y los valores son TIPO a devolver y parametros de entrada
 - Se pueden declarar variables globales tanto al principio como al final como entre funciones
-- El main puede estar en cualquier sitio
+- El main siempre esta y puede encontrarse en cualquier parte del fichero, ya que se comprueba despues del parsing (sobrecargando la operacion)
+
 
 Los tokens:
 - tokens = {ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR }
