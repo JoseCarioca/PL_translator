@@ -105,20 +105,20 @@ class P1Parser(Parser):
     def Global(self,p):
         pass
 
-    @_('Global Declaracion')
+    @_('Global Declaracion ";"')
     def Global(self,p):
-        for var in p.Input:
-            if var in self.Variables and self.Variables.get(var) == "Global":
+        for var in p.Declaracion:
+            if (var,"Global") in self.Variables:
                 print("No puedes declarar variables con el mismo nombre en el mismo ámbito.")
                 self.ErrorFlag = True
             else:
-                self.Variables[var] = "Global"
+                self.Variables[(var,"Global")] = None
 
     @_('Global Funcion')
     def Global(self,p):
         pass
 
-    @_('TIPO ID "(" variables ")" "{" Input RETURN Operation ";" "}"  ')
+    @_('TIPO ID "(" variables ")" "{" Input RETURN Operation ";" "}" ')
     def Funcion(self,p):
         if p.Input != None:
             for var in p.Input:
@@ -198,16 +198,10 @@ class P1Parser(Parser):
 
     @_('ID')
     def Declaracion3(self,p):
-        if self.Variables.get(p.ID) != None:
-            print("Variable \""+p.ID+"\" no puede ser declarada mas de una vez.")
-            self.ErrorFlag = True
         return [p.ID]
 
     @_('ID "=" Operation')
     def Declaracion3(self,p):
-        if self.Variables.get(p.ID) != None:
-            print("Variable \""+p.ID+"\" no puede ser declarada mas de una vez.")
-            self.ErrorFlag = True
         return [p.ID]
 
     @_('INT')
