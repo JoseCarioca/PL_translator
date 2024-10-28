@@ -1,6 +1,7 @@
 
 //variables globales
-
+int d = 3;
+int b;
 int main(){
     int a = 1 || 0;
     int b,c;
