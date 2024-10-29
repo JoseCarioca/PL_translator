@@ -45,9 +45,9 @@ import os, sys, re
 
 class P1Lexer(Lexer):
 
-    tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA, SCANF, CADENA_SCANF} 
+    tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA_SCANF, CADENA, SCANF } 
 
-    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}'}
+    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}','&'}
     ignore = r' \t'
     ignore_newline = r'\n+'
 
@@ -64,11 +64,8 @@ class P1Lexer(Lexer):
     NOT_EQ = r'!='
     AND = r'&&'
     OR = r'\|\|'
+    CADENA_SCANF = r'\"%(d|i|u|f|s|)\"' # "%d" #de momento solo acepta tipos id
     CADENA = r'\"[^\"\']*\"'
-    CADENA_SCANF = r'\"%(d|i|u|f|s|)\"' # "%d",&ID #de momento solo acepta tipos id
-    
-
-    
 
     @_(r'\d+')
     def NUM(self, t):
@@ -182,6 +179,7 @@ class P1Parser(Parser):
     # Concatenación de Instrucciones
     @_('')
     def Input(self,p):
+        self.print = None
         if isinstance(p[-5], tuple):
             print("ambito es: "+ str(p[-5][1]))
             return [p[-5][1]]
@@ -190,8 +188,7 @@ class P1Parser(Parser):
             return [p[-5]]
 
     @_('Input Line ";"')
-    def Input(self,p):
-        #print("current func" + str(p[1]))
+    def Input(self,p): 
         self.current_function = p.Input[0] #ambito (no es la mejor solucion, quizas debamos subir todo y tener fun auxiliares en Funcion)
         if p.Line != None and p.Input != None:
             return p.Input+p.Line
@@ -215,6 +212,27 @@ class P1Parser(Parser):
             print("Error: Faltan las variables a imprimir en el printf")
             self.ErrorFlag = True
 
+    @_('PRINTF "(" CADENA "," AuxPrintf ")"')
+    def Line(self,p):
+        print("ambito printf con vars: " + str(self.current_function))
+        lpalabras = re.findall(r'\%[a-z]',p.CADENA)
+        if len(lpalabras) == len(p.AuxPrintf):
+             print("Num % y num vars igual :)")
+        else:
+            print("Warning: argumentos en printf no coinciden")
+            self.ErrorFlag = True
+        self.print = lpalabras+p.AuxPrintf # no lo vamos a usar
+      
+
+    @_('AuxPrintf "," ID')
+    def AuxPrintf(self,p): 
+        return p.AuxPrintf+[p.ID]
+
+
+    @_('ID')
+    def AuxPrintf(self,p):
+        return [p.ID]
+
     @_('SCANF "(" CADENA_SCANF "," "&" ID ")"')
     def Line(self,p):
         flag =  False
@@ -230,25 +248,6 @@ class P1Parser(Parser):
         else:
             print("Error: variable en SCANF no declarada")
             self.ErrorFlag = True
-    
-
-    @_('PRINTF "(" CADENA "," AuxPrintf ")"')
-    def Line(self,p):
-        lpalabras = re.findall(r'\%[a-z]',p.CADENA)
-        if len(lpalabras) == len(p.AuxPrintf):
-            for palabra,id in lpalabras,p.AuxPrintf:
-                pass # comprobar que el tipo a imprimir coincide con el tipo de la variable
-
-    @_('AuxPrintf "," ID')
-    def AuxPrintf(self,p):
-        if p.AuxPrintf != None:
-            return p.AuxPrintf+p.ID
-        else: 
-            return p.ID
-
-    @_('')
-    def AuxPrintf(self,p):
-        pass
 
         
 
@@ -452,6 +451,8 @@ if __name__ == '__main__':
         inputs = file.read()
     tokens = lexer.tokenize(inputs)
     parser.parse(tokens)
+    for t in tokens:
+        print(t.type+ " "+ t.value+ "  \n")
     #Si el flag se mantuvo en 'False' la cadena fue aceptada
     if not parser.ErrorFlag:
         print("\nCadena Aceptada\n")
