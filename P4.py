@@ -63,7 +63,7 @@ class P1Lexer(Lexer):
     NOT_EQ = r'!='
     AND = r'&&'
     OR = r'\|\|'
-    CADENA_SCANF = r'\"%(d|i|u)\"' # "%d",&ID #de momento solo acepta tipos id
+    CADENA_SCANF = r'\"%(d|i|u|f|s|)\"' # "%d",&ID #de momento solo acepta tipos id
     CADENA = r'\".*\"'
 
     
@@ -136,6 +136,7 @@ class P1Parser(Parser):
         if p.TIPO_ID[1] =="main":
             self.has_main = True
         if p.Input != None:
+            p.Input.pop(0) # el primer elemento es el nombre de la funcion
             for var in p.Input:
                 if (var,p.TIPO_ID[1]) in self.Variables.keys():
                     print("variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
@@ -161,6 +162,7 @@ class P1Parser(Parser):
         if p.ID =="main":
             self.has_main = True
         if p.Input != None:
+            p.Input.pop(0) # el primer elemento es el nombre de la funcion
             for var in p.Input:
                 if (var,p.ID) in self.Variables.keys():
                     print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
@@ -177,10 +179,17 @@ class P1Parser(Parser):
     # Concatenación de Instrucciones
     @_('')
     def Input(self,p):
-        pass
+        if isinstance(p[-5], tuple):
+            print("ambito es: "+ str(p[-5][1]))
+            return [p[-5][1]]
+        elif isinstance(p[-5], str):
+            print("ambito de funcion void es: "+ str(p[-5]))
+            return [p[-5]]
 
     @_('Input Line ";"')
     def Input(self,p):
+        #print("current func" + str(p[1]))
+        self.current_function = p.Input[0] #ambito (no es la mejor solucion, quizas debamos subir todo y tener fun auxiliares en Funcion)
         if p.Line != None and p.Input != None:
             return p.Input+p.Line
         elif p.Line != None:
@@ -204,18 +213,20 @@ class P1Parser(Parser):
     @_('SCANF "(" CADENA_SCANF "," "&" ID ")"')
     def Line(self,p):
         flag =  False
-        for (id_part, _) in self.Variables.keys():
-            if id_part == p.ID:
+        for (id,ambito) in self.Variables.keys():
+            if id == p.ID and (ambito == self.current_function or ambito == 'Global'):
                 flag = True
                 break
         if flag:    
             if any(char in p.CADENA_SCANF for char in "udi"):
-                print("SE METE TIPO ENTERO")
+                print("SE METE TIPO ENTERO en " + str(p.ID))
             else:
                 print("SE PIDE DE OTRO TIPO")
         else:
             print("Error: variable en SCANF no declarada")
             self.ErrorFlag = True
+        
+        #return p.Line
 
 
         
@@ -398,6 +409,9 @@ class P1Parser(Parser):
 if __name__ == '__main__':
    
     lexer = P1Lexer()
+    # lexer.tokens = sorted(lexer.tokens)
+    # for token in lexer.tokens:
+    #     print(token)
     parser = P1Parser()
     fichero = input('escribe nombre del archivo (ejemplo: hola.c) > ')
     if not fichero: #si esta vacio
