@@ -1,4 +1,4 @@
-#   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA, SCANF, CADENA_SCANF } 
+#   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA } 
 #   literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' }
 #   
 #   Global -> empty | Global Declaracion ';' | Global Funcion
@@ -10,7 +10,7 @@
 #   listavars -> listavars ',' TIPO ID | TIPO ID
 #
 #   Input -> empty | Input Line ';' 
-#   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ')' | SCANF '(' CADENA_SCANF ')'
+#   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ')'
 #   
 #   Declaracion -> TIPO_ID | TIPO_ID '=' Operation | Declaracion2 Declaracion3
 #   Declaracion2 -> TIPO_ID ',' | TIPO_ID '=' Operation ',' | Declaracion2 Declaracion3 ','
@@ -44,7 +44,7 @@ import os, sys
 
 class P1Lexer(Lexer):
 
-    tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA, SCANF, CADENA_SCANF} 
+    tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA} 
 
     literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}'}
     ignore = r' \t'
@@ -55,7 +55,6 @@ class P1Lexer(Lexer):
     VOID = r'void'
     RETURN = r'return'
     PRINTF = r'printf'
-    SCANF = r'scanf'
     ID = r'[a-zA-Z_][a-zA-Z0-9_]*'
     EQUAL = r'=='
     LE_EQ = r'<='

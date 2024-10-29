@@ -5,6 +5,7 @@ int main(){
    return 0;
 }
 int g;
+
 void hola(int c) 
 {
     int c = 5; //re declaracion 

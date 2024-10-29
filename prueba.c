@@ -7,6 +7,7 @@ int main(){
     int b,c;
     b+3;
     printf("Hola Mundo");
+    scanf("%d",&b);
     return a;
 }
 
