@@ -10,7 +10,8 @@
 #   listavars -> listavars ',' TIPO ID | TIPO ID
 #
 #   Input -> empty | Input Line ';' 
-#   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ')' | SCANF '(' CADENA_SCANF  ')'
+#   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ',' AuzPrintf ')' | SCANF '(' CADENA_SCANF ')'
+#   AuxPrintf -> empty | AuxPrintf ',' ID
 #   
 #   Declaracion -> TIPO_ID | TIPO_ID '=' Operation | Declaracion2 Declaracion3
 #   Declaracion2 -> TIPO_ID ',' | TIPO_ID '=' Operation ',' | Declaracion2 Declaracion3 ','
@@ -40,13 +41,13 @@
 # 
 
 from sly import Lexer,Parser
-import os, sys
+import os, sys, re
 
 class P1Lexer(Lexer):
 
     tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA, SCANF, CADENA_SCANF} 
 
-    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}', '&'}
+    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}'}
     ignore = r' \t'
     ignore_newline = r'\n+'
 
@@ -63,9 +64,7 @@ class P1Lexer(Lexer):
     NOT_EQ = r'!='
     AND = r'&&'
     OR = r'\|\|'
-    CADENA_SCANF = r'\"%(d|i|u)\"' # "%d",&ID #de momento solo acepta tipos id
-    CADENA = r'\".*\"'
-
+    CADENA = r'\"[^\"\']*\"'
     
 
     @_(r'\d+')
@@ -95,11 +94,12 @@ class P1Parser(Parser):
         self.has_main = False
         self.Variables = {}
         self.Funciones = {}
+        self.Traduccion = ""
     
     # Error
     def error(self, t):
         self.ErrorFlag = True
-        #print("\nCadena no Aceptada\n")
+        print("\nCadena no Aceptada\n")
         tok = next(self.tokens, None)
         while tok:
             tok = next(self.tokens, None)
@@ -199,26 +199,27 @@ class P1Parser(Parser):
     
     @_('PRINTF "(" CADENA ")"')
     def Line(self,p):
-        pass
-
-    @_('SCANF "(" CADENA_SCANF "," "&" ID ")"')
-    def Line(self,p):
-        flag =  False
-        for (id_part, _) in self.Variables.keys():
-            if id_part == p.ID:
-                flag = True
-                break
-        if flag:    
-            if any(char in p.CADENA_SCANF for char in "udi"):
-                print("SE METE TIPO ENTERO")
-            else:
-                print("SE PIDE DE OTRO TIPO")
-        else:
-            print("Error: variable en SCANF no declarada")
+        if re.findall(r'\%[a-z]',p.CADENA):
+            print("Error: Faltan las variables a imprimir en el printf")
             self.ErrorFlag = True
 
+    @_('PRINTF "(" CADENA "," AuxPrintf ")"')
+    def Line(self,p):
+        lpalabras = re.findall(r'\%[a-z]',p.CADENA)
+        if len(lpalabras) == len(p.AuxPrintf):
+            for palabra,id in lpalabras,p.AuxPrintf:
+                pass # comprobar que el tipo a imprimir coincide con el tipo de la variable
 
-        
+    @_('AuxPrintf "," ID')
+    def AuxPrintf(self,p):
+        if p.AuxPrintf != None:
+            return p.AuxPrintf+p.ID
+        else: 
+            return p.ID
+
+    @_('')
+    def AuxPrintf(self,p):
+        pass
 
     # Declaraciones
     @_('Declaracion2 Declaracion3')
@@ -293,7 +294,7 @@ class P1Parser(Parser):
 
     @_('compOp equalSymbol equalOp')
     def equalOp(self,p):
-        pass
+       pass
 
     @_('addOp')
     def compOp(self,p):
@@ -345,14 +346,17 @@ class P1Parser(Parser):
 
     @_('"-" fact')
     def fact(self,p):
+        # self.Traduccion = resta_unaria(p.fact,self.Traduccion)
         pass
 
     @_('"!" fact')
     def fact(self,p):
+        # self.Traduccion = negacion(p.fact,self.Traduccion)
         pass
 
     @_('"(" Operation ")"')
     def fact(self,p):
+        # self.Traduccion = parentesis(p.fact,self.Traduccion)
         pass
 
     @_('')
@@ -377,7 +381,7 @@ class P1Parser(Parser):
 
     @_('NUM')
     def fact(self,p):
-        pass
+        return p.NUM
     
     @_('fcall')
     def fact(self,p):
@@ -392,8 +396,18 @@ class P1Parser(Parser):
         if not self.has_main:
             print("Error: No se encontró la función main")
             self.ErrorFlag = True
-        if self.ErrorFlag:
-            print("\nCadena no Aceptada\n")
+
+def negacion(id,trad):
+    trad += "!" + str(id)
+    return (id,trad)
+
+def resta_unaria(id,trad):
+    trad += "-" + str(id)
+    return (id, trad)
+
+def parentesis(id, trad):
+    trad += "(" + str(id) +")"
+    return (id,trad)
 
 if __name__ == '__main__':
    
@@ -410,6 +424,8 @@ if __name__ == '__main__':
     #Si el flag se mantuvo en 'False' la cadena fue aceptada
     if not parser.ErrorFlag:
         print("\nCadena Aceptada\n")
+        with open(os.path.join(sys.path[0], "traduccion.txt"), "w") as file:
+            file.write(parser.Traduccion)
         for key,value in parser.Variables.items():
             print("Variable: "+key[0]+" Ambito: "+key[1])
         for key,value in parser.Funciones.items():
