@@ -1,5 +1,5 @@
 #   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA, SCANF, CADENA_SCANF } 
-#   literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' }
+#   literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')', '&'}
 #   
 #   Global -> empty | Global Declaracion ';' | Global Funcion
 #
@@ -10,7 +10,7 @@
 #   listavars -> listavars ',' TIPO ID | TIPO ID
 #
 #   Input -> empty | Input Line ';' 
-#   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ',' AuzPrintf ')' | SCANF '(' CADENA_SCANF ')'
+#   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ',' AuxPrintf ')' | SCANF '(' CADENA_SCANF ')'
 #   AuxPrintf -> empty | AuxPrintf ',' ID
 #   
 #   Declaracion -> TIPO_ID | TIPO_ID '=' Operation | Declaracion2 Declaracion3
@@ -47,7 +47,7 @@ class P1Lexer(Lexer):
 
     tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA, SCANF, CADENA_SCANF} 
 
-    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}'}
+    literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}', '&'}
     ignore = r' \t'
     ignore_newline = r'\n+'
 
@@ -64,6 +64,7 @@ class P1Lexer(Lexer):
     NOT_EQ = r'!='
     AND = r'&&'
     OR = r'\|\|'
+    CADENA_SCANF = r'\"%(d|i|u|f|s|)\"' # "%d" #de momento solo acepta tipos id
     CADENA = r'\"[^\"\']*\"'
     
 
@@ -129,16 +130,17 @@ class P1Parser(Parser):
         if p.variables != None:
             for var in p.variables:
                 if(var,p.TIPO_ID[1]) in self.Variables.keys():
-                    print("variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
+                    print("Variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
                     self.ErrorFlag = True
                 else:
                     self.Variables[(var,p.TIPO_ID[1])] = None
         if p.TIPO_ID[1] =="main":
             self.has_main = True
         if p.Input != None:
+            p.Input.pop(0) # el primer elemento es el nombre de la funcion
             for var in p.Input:
                 if (var,p.TIPO_ID[1]) in self.Variables.keys():
-                    print("variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
+                    print("Variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
                     self.ErrorFlag = True
                 else:
                     self.Variables[(var,p.TIPO_ID[1])] = None
@@ -154,16 +156,17 @@ class P1Parser(Parser):
         if p.variables != None:
             for var in p.variables:
                 if(var,p.ID) in self.Variables.keys():
-                    print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
+                    print("Variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
                     self.ErrorFlag = True
                 else:
                     self.Variables[(var,p.ID)] = None
         if p.ID =="main":
             self.has_main = True
         if p.Input != None:
+            p.Input.pop(0) # el primer elemento es el nombre de la funcion
             for var in p.Input:
                 if (var,p.ID) in self.Variables.keys():
-                    print("variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
+                    print("Variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
                     self.ErrorFlag = True
                 else:
                     self.Variables[(var,p.ID)] = None
@@ -177,10 +180,14 @@ class P1Parser(Parser):
     # Concatenación de Instrucciones
     @_('')
     def Input(self,p):
-        pass
+        if isinstance(p[-5], tuple):
+            return [p[-5][1]]
+        elif isinstance(p[-5], str):
+            return [p[-5]]
 
     @_('Input Line ";"')
     def Input(self,p):
+        self.current_function = p.Input[0]
         if p.Line != None and p.Input != None:
             return p.Input+p.Line
         elif p.Line != None:
@@ -207,19 +214,33 @@ class P1Parser(Parser):
     def Line(self,p):
         lpalabras = re.findall(r'\%[a-z]',p.CADENA)
         if len(lpalabras) == len(p.AuxPrintf):
-            for palabra,id in lpalabras,p.AuxPrintf:
-                pass # comprobar que el tipo a imprimir coincide con el tipo de la variable
+            pass # comprobar que el tipo a imprimir coincide con el tipo de la variable
 
     @_('AuxPrintf "," ID')
     def AuxPrintf(self,p):
-        if p.AuxPrintf != None:
-            return p.AuxPrintf+p.ID
-        else: 
-            return p.ID
+        return p.AuxPrintf+[p.ID]
 
-    @_('')
+    @_('ID')
     def AuxPrintf(self,p):
-        pass
+        return [p.ID]
+
+    @_('SCANF "(" CADENA_SCANF "," "&" ID ")"')
+    def Line(self,p):
+        flag =  False
+        print("Llega" + str(len(self.Variables)))
+        for (id,ambito) in self.Variables.keys():
+            print(p.ID + " " + self.current_function + "\n")
+            if id == p.ID and (ambito == self.current_function or ambito == 'Global'):
+                flag = True
+                break
+        if flag:    
+            if any(char in p.CADENA_SCANF for char in "udi"):
+                print("SE METE TIPO ENTERO en " + str(p.ID))
+            else:
+                print("SE PIDE DE OTRO TIPO")
+        else:
+            print("Error: variable en SCANF no declarada")
+            self.ErrorFlag = True
 
     # Declaraciones
     @_('Declaracion2 Declaracion3')
