@@ -190,9 +190,18 @@ class P1Parser(Parser):
 
     @_('PRINTF "(" CADENA "," AuxPrintf ")"')
     def Line(self,p):
-        lpalabras = re.findall(r'%(d|i|u|f|s|)',p.CADENA)
-        if len(lpalabras) == len(p.AuxPrintf):
-            pass # comprobar que el tipo a imprimir coincide con el tipo de la variable
+        lpalabras = re.findall(r'%(u|d|i)',p.CADENA)
+        if not len(lpalabras):
+                print("Error: Tipo a recibir no coincide con tipo de variable en scanf")
+                self.ErrorFlag = True
+        elif len(lpalabras) != len(p.AuxPrintf):
+            print("Error: No se usan el mismo numero de variables que se le pasa al printf")
+            self.ErrorFlag = True
+        else:
+            for var in p.AuxPrintf:
+                if all((var,self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
+                    print("Error: Variables en el printf no existen en su ambito")
+                    self.ErrorFlag = True
 
     @_('AuxPrintf "," ID')
     def AuxPrintf(self,p):
