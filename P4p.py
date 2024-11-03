@@ -190,7 +190,7 @@ class P1Parser(Parser):
 
     @_('PRINTF "(" CADENA "," AuxPrintf ")"')
     def Line(self,p):
-        lpalabras = re.findall(r'\%[a-z]',p.CADENA)
+        lpalabras = re.findall(r'%(d|i|u|f|s|)',p.CADENA)
         if len(lpalabras) == len(p.AuxPrintf):
             pass # comprobar que el tipo a imprimir coincide con el tipo de la variable
 
@@ -375,16 +375,12 @@ class P1Parser(Parser):
 
     @_('listavars')
     def variables(self,p):
-        if isinstance(p[-4], tuple):
-            current_function = p[-4][1]
-        elif isinstance(p[-4], str):
-            current_function = p[-4]
         for var in p.listavars:
-            if(var,current_function) in self.Variables.keys():
-                print("Variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
+            if(var,self.current_function) in self.Variables.keys():
+                print("Variable '" + var + "' ya declarada en '" + self.current_function + "' previamente")
                 self.ErrorFlag = True
             else:
-                self.Variables[(var,current_function)] = None
+                self.Variables[(var,self.current_function)] = None
         return p.listavars
 
     @_('TIPO ID')
