@@ -125,69 +125,40 @@ class P1Parser(Parser):
     def Global(self,p):
         pass
 
-    @_('TIPO_ID "(" variables ")" "{" Input RETURN Operation ";" "}"')
+    @_('TIPO_ID setCurrentFunction "(" variables ")" "{" Input RETURN Operation ";" "}"')
     def Funcion(self,p):
-        if p.variables != None:
-            for var in p.variables:
-                if(var,p.TIPO_ID[1]) in self.Variables.keys():
-                    print("Variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
-                    self.ErrorFlag = True
-                else:
-                    self.Variables[(var,p.TIPO_ID[1])] = None
         if p.TIPO_ID[1] =="main":
-            self.has_main = True
-        if p.Input != None:
-            p.Input.pop(0) # el primer elemento es el nombre de la funcion
-            for var in p.Input:
-                if (var,p.TIPO_ID[1]) in self.Variables.keys():
-                    print("Variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
-                    self.ErrorFlag = True
-                else:
-                    self.Variables[(var,p.TIPO_ID[1])] = None
-            
+            self.has_main = True            
         if p.TIPO_ID[1] in self.Funciones.keys():
             print("No puedes declarar funciones con el mismo nombre.")
             self.ErrorFlag = True
         else:
             self.Funciones[p.TIPO_ID[1]] = (p.variables,p.TIPO_ID[0])
 
-    @_('VOID ID "(" variables ")" "{" Input "}"')
+    @_('VOID ID setCurrentFunction "(" variables ")" "{" Input "}"')
     def Funcion(self,p):
-        if p.variables != None:
-            for var in p.variables:
-                if(var,p.ID) in self.Variables.keys():
-                    print("Variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
-                    self.ErrorFlag = True
-                else:
-                    self.Variables[(var,p.ID)] = None
         if p.ID =="main":
-            self.has_main = True
-        if p.Input != None:
-            p.Input.pop(0) # el primer elemento es el nombre de la funcion
-            for var in p.Input:
-                if (var,p.ID) in self.Variables.keys():
-                    print("Variable '" + var + "' ya declarada en '" + p.ID + "' previamente")
-                    self.ErrorFlag = True
-                else:
-                    self.Variables[(var,p.ID)] = None
-            
+            self.has_main = True 
         if p.ID in self.Funciones.keys():
             print("No puedes declarar funciones con el mismo nombre.")
             self.ErrorFlag = True
         else:
             self.Funciones[p.ID] = (p.variables,"void")
 
+    @_("")
+    def setCurrentFunction(self,p):
+        if isinstance(p[-1], tuple):
+            self.current_function = p[-1][1]
+        elif isinstance(p[-1], str):
+            self.current_function = p[-1]
+
     # Concatenación de Instrucciones
     @_('')
     def Input(self,p):
-        if isinstance(p[-5], tuple):
-            return [p[-5][1]]
-        elif isinstance(p[-5], str):
-            return [p[-5]]
+        pass
 
     @_('Input Line ";"')
     def Input(self,p):
-        self.current_function = p.Input[0]
         if p.Line != None and p.Input != None:
             return p.Input+p.Line
         elif p.Line != None:
@@ -202,6 +173,13 @@ class P1Parser(Parser):
 
     @_('Declaracion')
     def Line(self,p):
+        if p.Declaracion != None:
+            for var in p.Declaracion:
+                if (var,self.current_function) in self.Variables.keys():
+                    print("Variable '" + var + "' ya declarada en '" + self.current_function + "' previamente")
+                    self.ErrorFlag = True
+                else:
+                    self.Variables[(var,self.current_function)] = None
         return p.Declaracion
     
     @_('PRINTF "(" CADENA ")"')
@@ -227,17 +205,14 @@ class P1Parser(Parser):
     @_('SCANF "(" CADENA_SCANF "," "&" ID ")"')
     def Line(self,p):
         flag =  False
-        print("Llega" + str(len(self.Variables)))
         for (id,ambito) in self.Variables.keys():
-            print(p.ID + " " + self.current_function + "\n")
             if id == p.ID and (ambito == self.current_function or ambito == 'Global'):
                 flag = True
                 break
         if flag:    
-            if any(char in p.CADENA_SCANF for char in "udi"):
-                print("SE METE TIPO ENTERO en " + str(p.ID))
-            else:
-                print("SE PIDE DE OTRO TIPO")
+            if not any(char in p.CADENA_SCANF for char in "udi"):
+                print("Error: Tipo a recibir no coincide con tipo de variable en scanf")
+                self.ErrorFlag = True
         else:
             print("Error: variable en SCANF no declarada")
             self.ErrorFlag = True
@@ -396,10 +371,20 @@ class P1Parser(Parser):
 
     @_('')
     def variables(self,p):
-        return
+        pass
 
     @_('listavars')
     def variables(self,p):
+        if isinstance(p[-4], tuple):
+            current_function = p[-4][1]
+        elif isinstance(p[-4], str):
+            current_function = p[-4]
+        for var in p.listavars:
+            if(var,current_function) in self.Variables.keys():
+                print("Variable '" + var + "' ya declarada en '" + p.TIPO_ID[1] + "' previamente")
+                self.ErrorFlag = True
+            else:
+                self.Variables[(var,current_function)] = None
         return p.listavars
 
     @_('TIPO ID')
