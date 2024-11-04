@@ -17,23 +17,40 @@ Decisiones de la P3:
 - Se pueden declarar variables globales tanto al principio como al final como entre funciones
 - El main siempre esta y puede encontrarse en cualquier parte del fichero, ya que se comprueba despues del parsing (sobrecargando la operacion)
 
+Decisiones de la P4:
+- Para guardar el ambito se usa el caracter terminador 'setCurrentFunction' que podrá usarse en el cuerpo de dicha función
+- Las funciones scanf y printf aceptan cualquier indicador de formato referente a enteros: u | d | i. Además de otros formatos como "%f" y "%s".
+- No se aceptan formatos de printf con distinto número de indicadores y de variables o con diferente tipo (conversion en momento de escritura)
+
+Cambios respecto a la P3:
+- Se añade la regla SCANF y nodos para la creación del AST
+- Se añade un nodo por cada regla aritmética-lógica con la que luego se escribe un fichero txt con cada operación.
+- Para evitar el uso de atributos heredados, las variables se guardan en la regla "Line -> Declaracion".
+
 
 Los tokens:
-- tokens = {ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR }
-- literals = { '=', '!', '+', '-', '*', '/', ';', '(', ')', '{', '}' }
+-   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA_SCANF, CADENA, SCANF } 
+- literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}','&'}
 
 La gramática:
--   funcion -> funcion TIPO ID '(' variables')' '{' Input '}'
+-   Global -> empty | Global Declaracion ';' | Global Funcion
+-   Funcion -> TIPO_ID '(' variables ')' '{' Input RETURN Operation ';' '}'
+-   Funcion -> VOID ID '(' variables ')' '{' Input '}'
+
+-   variables -> empty | listavars
+-   listavars -> listavars ',' TIPO ID | TIPO ID
+
 -   Input -> empty | Input Line ';' 
--   Line  -> Declaracion | Assign Operation
--   
--   Declaracion -> Declaracion2 Declaracion3
--   Declaracion2 -> TIPO | Declaracion2 Declaracion3 ','
--   Declaracion3 -> ID | ID '=' Operation
--   TIPO -> INT
--
+-   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ',' AuxPrintf ')' | SCANF '(' CADENA_SCANF ')'
+-   AuxPrintf -> empty | AuxPrintf ',' ID
 -   Assign -> empty | Assign ID '='
--
+-   
+-   Declaracion -> TIPO_ID | TIPO_ID '=' Operation | Declaracion2 Declaracion3
+-   Declaracion2 -> TIPO_ID ',' | TIPO_ID '=' Operation ',' | Declaracion2 Declaracion3 ','
+-   Declaracion3 -> ID | ID '=' Operation
+-   TIPO_ID -> TIPO ID
+-   TIPO -> INT
+
 -   Operation -> andOp | andOp '||' Operation
 -   andOp -> equalOp | equalOp '&&' andOp
 -   equalOp -> compOp | compOp equalSymbol equalOp
@@ -49,7 +66,7 @@ La gramática:
 -   prodOp -> fact '*' prodOp
 -   prodOp -> fact '/' prodOp
 -
--   fact -> ID | NUM | '!' fact | '-'fact | '(' Operation ')'
--   listavars -> var | var Tipo ID
--   variables -> empty | listavars
--   listavars -> listavars ',' TIPO ID | TIPO ID
+-   fact -> ID | NUM | fcall | '!' fact | '-'fact | '(' Operation ')'
+-   fcall -> ID '(' listavars ')'
+
+
