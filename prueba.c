@@ -1,18 +1,22 @@
+int global;
+int v[2];
 
-//variables globales
-int d = 3;
 int main(){
-    int a, x, y ,z;
-    a = x = y = z = 0 && 1;
-    int b = a + 3;
-    int c;
-    scanf("%i",&c);
-    printf("Hola %i Mundo",b);
-    printf("Hola %i Mundo",a);
-    return 0;
+    int a = !1 || 0;
+    int b, c;
+    int p = 2 + a, l[1][1], k[3];
+    a = b+3;
+    b = !c*(0<=(a!=b))>=(c+1)-b/!(a*2/-b);
+    c = !a==b;
+    v[0];
+    a || b && c;
+    printf("Hola Mundo %d %u prueba %i",global,a,c);
+    return a;
 }
 
-void fun(int b, int c)
-{
-    int d = b + c;
+int a;
+
+void fun(int b, int c){
+    int a;
+    scanf("%d",&b);
 }
