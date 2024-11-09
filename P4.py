@@ -7,14 +7,16 @@
 #   Funcion -> VOID ID '(' variables ')' '{' Input '}'
 #
 #   variables -> empty | listavars
-#   listavars -> listavars ',' TIPO ID | TIPO ID
+#   listavars -> listavars ',' TIPO ID | TIPO ID 
 #
 #   Input -> empty | Input Line ';' 
-#   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ',' AuxPrintf ')' | SCANF '(' CADENA_SCANF ')'
-#   AuxPrintf -> empty | AuxPrintf ',' ID
+#   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ',' AuxPrintf ')' | PRINTF '(' CADENA ')'
+#  | SCANF '(' CADENA_SCANF ','  AuxScanf ')'
+#   AuxPrintf -> ID | AuxPrintf ',' ID
+#   AuxScanf -> '&' ID | AuxScanf '&' ID
 #   
 #   Declaracion -> TIPO_ID | TIPO_ID '=' Operation | Declaracion2 Declaracion3
-#   Declaracion2 -> TIPO_ID ',' | TIPO_ID '=' Operation ',' | Declaracion2 Declaracion3 ','
+#   Declaracion2 -> TIPO_ID  ',' | TIPO_ID '=' Operation ',' | Declaracion2 Declaracion3 ','
 #   Declaracion3 -> ID | ID '=' Operation
 #   TIPO_ID -> TIPO ID
 #   TIPO -> INT
@@ -37,8 +39,9 @@
 #   prodOp -> fact '/' prodOp
 #
 #   fact -> ID | NUM | fcall | '!' fact | '-'fact | '(' Operation ')'
-#   fcall -> ID '(' listavars ')'
-# 
+#   fcall -> ID '(' lista_IDs ')'
+#   entradaID -> empty | listaID
+#   listaID -> ID | listaID',' ID
 
 from sly import Lexer,Parser
 import os, sys, re
@@ -64,7 +67,7 @@ class P1Lexer(Lexer):
     NOT_EQ = r'!='
     AND = r'&&'
     OR = r'\|\|'
-    CADENA_SCANF = r'\"%(d|i|u|f|s|)\"' # "%d" #de momento solo acepta tipos id
+    CADENA_SCANF = r'\"(%(d|i|u))+\"' # "%d" #de momento solo acepta tipos id
     CADENA = r'\"[^\"\']*\"'
     
 
@@ -192,7 +195,7 @@ class P1Parser(Parser):
     def Line(self,p):
         lpalabras = re.findall(r'%(u|d|i)',p.CADENA)
         if not len(lpalabras):
-                print("Error: Tipo a recibir no coincide con tipo de variable en scanf")
+                print("Error: Tipo a recibir no coincide con tipo de variable en printf")
                 self.ErrorFlag = True
         elif len(lpalabras) != len(p.AuxPrintf):
             print("Error: No se usan el mismo numero de variables que se le pasa al printf")
@@ -211,20 +214,42 @@ class P1Parser(Parser):
     def AuxPrintf(self,p):
         return [p.ID]
 
-    @_('SCANF "(" CADENA_SCANF "," "&" ID ")"')
+    @_('SCANF "(" CADENA_SCANF "," AuxScanf ")"')
     def Line(self,p):
-        flag =  False
-        for (id,ambito) in self.Variables.keys():
-            if id == p.ID and (ambito == self.current_function or ambito == 'Global'):
-                flag = True
-                break
-        if flag:    
-            if not any(char in p.CADENA_SCANF for char in "udi"):
-                print("Error: Tipo a recibir no coincide con tipo de variable en scanf")
-                self.ErrorFlag = True
+        entrada = re.findall(r'%(u|d|i)',p.CADENA_SCANF)
+        print(entrada)
+        print(p.AuxScanf)
+        if len(entrada) == len(p.AuxScanf):
+            for var in p.AuxScanf:
+                if all( (var, self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
+                    print("Error: Variables en el scanf no existen en su ambito")
+                    self.ErrorFlag = True
+                else:
+                    print("Bien. Variables scanf coinciden")
         else:
-            print("Error: variable en SCANF no declarada")
+            print("Error: No se usan el mismo numero de variables que se le pasa al scanf")
             self.ErrorFlag = True
+            
+        # flag =  False
+        # for (id,ambito) in self.Variables.keys():
+        #     if id == p.ID and (ambito == self.current_function or ambito == 'Global'):
+        #         flag = True
+        #         break
+        # if flag:    
+        #     if not any(char in p.CADENA_SCANF for char in "udi"):
+        #         print("Error: Tipo a recibir no coincide con tipo de variable en scanf")
+        #         self.ErrorFlag = True
+        # else:
+        #     print("Error: variable en SCANF no declarada")
+        #     self.ErrorFlag = True
+
+    @_('AuxScanf "," "&" ID')
+    def AuxScanf(self,p):
+        return p.AuxScanf+[p.ID]
+
+    @_('"&" ID')
+    def AuxScanf(self,p):
+        return [p.ID]
 
     # Declaraciones
     @_('Declaracion2 Declaracion3')
@@ -412,9 +437,30 @@ class P1Parser(Parser):
     def fact(self,p):
         pass
 
-    @_('ID "(" listavars ")"')
+    @_('ID "(" entradaID ")"')
     def fcall(self,p):
+        print("funciones existentes:" + str(self.Funciones))
+        if p.entradaID is not None:
+            for var in p.entradaID:
+                if all( (var, self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
+                    print("Error: Variables en llamada de " + p.ID + " no existen en su ambito")
+                    self.ErrorFlag = True
+
+    @_('')
+    def entradaID(self,p):
         pass
+
+    @_('listaID')
+    def entradaID(self,p):
+        return p.listaID
+
+    @_('ID')
+    def listaID(self,p):
+        return [p.ID]
+
+    @_('listaID "," ID')
+    def listaID(self,p):
+        return p.listaID+[p.ID]
 
     def parse(self, data):
         super().parse(data)

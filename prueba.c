@@ -11,6 +11,7 @@ int main(){
     v[0];
     a || b && c;
     printf("Hola Mundo %d %u prueba %i",global,a,c);
+    c = hola();
     return a;
 }
 
@@ -19,4 +20,9 @@ int a;
 void fun(int b, int c){
     int a;
     scanf("%d",&b);
+}
+
+int hola()
+{
+    return 1;
 }
