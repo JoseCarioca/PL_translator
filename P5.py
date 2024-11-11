@@ -7,7 +7,8 @@
 #   Funcion -> VOID ID '(' variables ')' '{' Input '}'
 #
 #   variables -> empty | listavars
-#   listavars -> listavars ',' TIPO ID | TIPO ID | TIPO '*' ID
+#   listavars -> listavars ',' TIPO ASTERISCO ID | TIPO ASTERISCO ID 
+#   ASTERISCO -> empty | ASTERISCO '*'
 #
 #   Input -> empty | Input Line ';' 
 #   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ',' AuxPrintf ')'
@@ -42,7 +43,8 @@
 #   fact -> ID | ID CORCHETES | NUM | fcall | '!' fact | '-'fact | '(' Operation ')'
 #   fcall -> ID '(' lista_IDs ')'
 #   entradaID -> empty | listaID
-#   listaID -> ID | listaID',' ID
+#   listaID -> AMPERSAN ID | listaID',' AMPERSAN ID
+#   AMPERSAN -> empty | AMPERSAN '&'
 
 
 from sly import Lexer,Parser
@@ -69,7 +71,7 @@ class P1Lexer(Lexer):
     NOT_EQ = r'!='
     AND = r'&&'
     OR = r'\|\|'
-    CADENA_SCANF = r'\"%(d|i|u|f|s|)\"' # "%d" #de momento solo acepta tipos id
+    CADENA_SCANF = r'\"(%(d|i|u|f|s))+\"' # "%d" #de momento solo acepta tipos id
     CADENA = r'\"[^\"\']*\"'
     
 
@@ -219,8 +221,6 @@ class P1Parser(Parser):
     @_('SCANF "(" CADENA_SCANF "," AuxScanf ")"')
     def Line(self,p):
         entrada = re.findall(r'%(u|d|i)',p.CADENA_SCANF)
-        print(entrada)
-        print(p.AuxScanf)
         if len(entrada) == len(p.AuxScanf):
             for var in p.AuxScanf:
                 if all( (var, self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
@@ -257,7 +257,6 @@ class P1Parser(Parser):
     
     @_('ID')
     def AuxScanf(self,p):
-        print("Auxscanf: ID") #no llega :(
         var = self.Variables.get((p.ID,self.current_function)) or self.Variables.get((p.ID,"Global"))
         if var == None:
             print("Error: Variable "+p.ID+" no está declarada")
@@ -266,7 +265,7 @@ class P1Parser(Parser):
             print("Error: Variable "+p.ID+" NO ES UN PUNTERO")
             self.ErrorFlag = True
         else:
-            print("Bien. variable "+p.ID+" es puntero")
+            pass #print("Bien. variable "+p.ID+" es puntero")
 
         return [p.ID]
 
@@ -325,9 +324,9 @@ class P1Parser(Parser):
     def TIPO(self,p):
         return "int"
     
-    @_('INT "*"')
-    def TIPO(self,p):
-        return "int*"
+    # @_('INT "*"')
+    # def TIPO(self,p):
+    #     return "int*"
     
     @_('"[" NUM "]"')
     def CORCHETES(self,p):
@@ -461,13 +460,30 @@ class P1Parser(Parser):
                 self.Variables[(var[1],self.current_function)] = varAux(var[0],var[2])
         return p.listavars
 
-    @_('TIPO ID')
+    @_('TIPO ASTERISCO ID')
     def listavars(self,p):
-        return [(p.TIPO,p.ID,[1])]
+        cadena = p.TIPO
+        if p.ASTERISCO != None:
+            cadena = cadena + p.ASTERISCO
+        return [(cadena,p.ID,[1])]
 
-    @_('listavars "," TIPO ID')
+    @_('listavars "," TIPO ASTERISCO ID')
     def listavars(self,p):
-        return p.listavars+[(p.TIPO,p.ID,[1])]
+        cadena = p.TIPO
+        if p.ASTERISCO != None:
+            cadena = cadena + p.ASTERISCO
+        return p.listavars+[(cadena,p.ID,[1])] #concatenado
+    
+    @_('')
+    def ASTERISCO(self,p):
+        pass
+
+    @_('ASTERISCO "*"')
+    def ASTERISCO(self,p):
+        if p.ASTERISCO == None:
+            return "*"
+        else: 
+            return str(p.ASTERISCO+"*")
 
     @_('ID')
     def fact(self,p):
@@ -501,9 +517,9 @@ class P1Parser(Parser):
     
     @_('ID "(" entradaID ")"')
     def fcall(self,p):
-        print("funciones existentes:" + str(self.Funciones))
+        #print("funciones existentes:" + str(self.Funciones))
         if p.entradaID is not None:
-            for var in p.entradaID:
+            for (AMP,var) in p.entradaID:
                 if all( (var, self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
                     print("Error: Variables en llamada de " + p.ID + " no existen en su ambito")
                     self.ErrorFlag = True
@@ -516,13 +532,23 @@ class P1Parser(Parser):
     def entradaID(self,p):
         return p.listaID
 
-    @_('ID')
+    @_('AMPERSAN ID')
     def listaID(self,p):
-        return [p.ID]
+        
+        return [(p.AMPERSAN,p.ID)]
 
-    @_('listaID "," ID')
+    @_('listaID "," AMPERSAN ID')
     def listaID(self,p):
-        return p.listaID+[p.ID]
+        return p.listaID+[(p.AMPERSAN,p.ID)]
+    
+    @_('')
+    def AMPERSAN(self,p):
+        pass
+
+    @_('"&"')
+    def AMPERSAN(self,p):
+        return "&"
+        
 
     def parse(self, data):
         super().parse(data)

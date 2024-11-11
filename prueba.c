@@ -1,6 +1,11 @@
 int global;
 int v[2];
 
+void fun(int *b, int c){
+    int a;
+    scanf("%d%d",b,&a);
+}
+
 int main(){
     int a = !1 || 0;
     int b, c;
@@ -11,16 +16,13 @@ int main(){
     v[0];
     a || b && c;
     printf("Hola Mundo %d %u prueba %i",global,a,c);
-    c = hola();
+    fun(&b, c);
     return a;
 }
 
 int a;
 
-void fun(int b, int c){
-    int a;
-    scanf("%d",&b);
-}
+
 
 int hola()
 {

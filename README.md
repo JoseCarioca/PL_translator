@@ -27,6 +27,17 @@ Cambios respecto a la P3:
 - Se añade un nodo por cada regla aritmética-lógica con la que luego se escribe un fichero txt con cada operación.
 - Para evitar el uso de atributos heredados, las variables se guardan en la regla "Line -> Declaracion".
 
+Decisiones de la P5:
+- A la hora de declarar variables, no hay límites en el tamaño o dimensiones de los array a nivel de sintaxis.
+- No es posible la declaración de punteros pero sí el paso por referencia de variables ( funcion(&entero) )
+- Se restinge la falta de '&' en la llamada de scanf a tipos de dato simple (puntero a entero int*)
+
+
+Cambios respecto a la P4:
+- La gramática acepta arrays de 1 o varias dimensiones (no hay límite) y el paso por referencia de variables
+- Se ha modificado la funcion scanf para que acepte variables tipo puntero y varios parámetros en una misma llamada
+- Se añaden las reglas 'ASTERISCO' y 'AMPERSAN' para la declaración y llamada de variables respectivamente
+
 
 Los tokens:
 -   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA_SCANF, CADENA, SCANF } 
