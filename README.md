@@ -32,7 +32,6 @@ Decisiones de la P5:
 - No es posible la declaración de punteros pero sí el paso por referencia de variables ( funcion(&entero) )
 - Se restinge la falta de '&' en la llamada de scanf a tipos de dato simple (puntero a entero int*)
 
-
 Cambios respecto a la P4:
 - La gramática acepta arrays de 1 o varias dimensiones (no hay límite) y el paso por referencia de variables
 - Se ha modificado la funcion scanf para que acepte variables tipo puntero y varios parámetros en una misma llamada
