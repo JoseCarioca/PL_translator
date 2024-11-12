@@ -263,8 +263,6 @@ class P1Parser(Parser):
         elif var.tipo != "int*":
             print("Error: Variable "+p.ID+" NO ES UN PUNTERO")
             self.ErrorFlag = True
-        else:
-            print("Bien. variable "+p.ID+" es puntero")
 
         return p.AuxScanf+[p.ID]
     
@@ -277,8 +275,6 @@ class P1Parser(Parser):
         elif var.tipo != "int*":
             print("Error: Variable "+p.ID+" NO ES UN PUNTERO")
             self.ErrorFlag = True
-        else:
-            pass #print("Bien. variable "+p.ID+" es puntero")
 
         return [p.ID]
 
@@ -552,12 +548,29 @@ class P1Parser(Parser):
     
     @_('ID "(" entradaID ")"')
     def fcall(self,p):
-        #print("funciones existentes:" + str(self.Funciones))
-        if p.entradaID is not None:
-            for (AMP,var) in p.entradaID:
-                if all( (var, self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
-                    print("Error: Variables en llamada de " + p.ID + " no existen en su ambito")
-                    self.ErrorFlag = True
+        params = self.Funciones.get(p.ID)
+        if params != None:
+            if len(params[0]) == len(p.entradaID):
+                for i in range(len(p.entradaID)):
+                    (AMP,var) = p.entradaID[i]
+                    aux = self.Variables.get((var, self.current_function))
+                    tipo = aux.tipo
+                    if AMP is not None:
+                        tipo = tipo + "*"
+                    if tipo != params[0][i][0]:
+                        print("Error: Variable " + tipo +" "+ var + " no coincide con funcion")
+                        self.ErrorFlag = True  
+                    else:
+                        if all( (var, self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
+                            print("Error: Variables en llamada de " + p.ID + " no existen en su ambito")
+                            self.ErrorFlag = True
+                    i = i+1
+            else:
+                print("Error: Nº Parametros de llamada no coinciden con Nº parametros de funcion " + str(p.ID))
+                self.ErrorFlag = True
+        else:
+            print("Error: Funcion no se encuentra declarada (en este nivel)")
+            self.ErrorFlag = True
 
     @_('')
     def entradaID(self,p):

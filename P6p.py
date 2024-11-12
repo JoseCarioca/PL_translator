@@ -598,7 +598,6 @@ class P1Parser(Parser):
     @_('"&"')
     def AMPERSAN(self,p):
         return "&"
-        
 
     def parse(self, data):
         super().parse(data)
