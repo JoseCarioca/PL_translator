@@ -7,11 +7,10 @@
 #   Funcion -> VOID ID setCurrentFunction '(' variables ')' '{' Input '}'
 #   setCurrentFunction -> empty
 #
-#   Input -> empty | Input Line ';' 
+#   Input -> empty | Input Line ';' | Input Condicional 
 #
 #   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ')'
 #   | PRINTF '(' CADENA ',' AuxPrintf ')' | SCANF '(' CADENA_SCANF ','  AuxScanf ')' 
-#   | CONDICIONAL
 #
 #   AuxPrintf -> ID | AuxPrintf ',' ID
 #   AuxScanf -> ID | '&' ID | AuxScanf ',' ID | AuxScanf ',' '&' ID
@@ -30,8 +29,8 @@
 #   listavars -> listavars ',' TIPO ASTERISCO ID | TIPO ASTERISCO ID 
 #   ASTERISCO -> empty | ASTERISCO '*'
 #
-#   CONDICIONAL -> IF '(' Operation ')' Line ';' CONDICIONAL_ELSE | IF '(' Operation ')' '{' Input '}' CONDICIONAL_ELSE
-#   CONDICIONAL_ELSE -> empty | ELSE Line ';' | ELSE '{' Input '}'
+#   Condicional -> IF '(' Operation ')' ';' Condicional_ELSE | IF '(' Operation ')' Line ';' Condicional_ELSE | IF '(' Operation ')' '{' Input '}' Condicional_ELSE
+#   Condicional_ELSE -> empty | ELSE Line ';' | ELSE '{' Input '}'
 #
 #   Operation -> andOp | andOp '||' Operation
 #   andOp -> equalOp | equalOp '&&' andOp
@@ -183,6 +182,10 @@ class P1Parser(Parser):
         elif p.Input != None:
             return p.Input
     
+    @_('Input Condicional')
+    def Input(self,p):
+        pass
+
     # Tipos de Instrucciones
     @_('Assign Operation')
     def Line(self,p):
@@ -228,15 +231,9 @@ class P1Parser(Parser):
                 if all( (var, self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
                     print("Error: Variables en el scanf no existen en su ambito")
                     self.ErrorFlag = True
-                else:
-                    print("Bien. Variables scanf coinciden")
         else:
             print("Error: No se usan el mismo numero de variables que se le pasa al scanf")
             self.ErrorFlag = True
-
-    @_('CONDICIONAL')
-    def Line(self,p):
-        pass
 
     # Auxiliar para PRINTF
     @_('AuxPrintf "," ID')
@@ -286,24 +283,28 @@ class P1Parser(Parser):
         return [p.ID]
 
     #Condicionales
-    @_('IF "(" Operation ")" Line ";" CONDICIONAL_ELSE')
-    def CONDICIONAL(self,p):
+    @_('IF "(" Operation ")" Line ";" Condicional_ELSE')
+    def Condicional(self,p):
         pass
 
-    @_('IF "(" Operation ")" "{" Input "}" CONDICIONAL_ELSE')
-    def CONDICIONAL(self,p):
+    @_('IF "(" Operation ")" "{" Input "}" Condicional_ELSE')
+    def Condicional(self,p):
+        pass
+
+    @_('IF "(" Operation ")" ";" Condicional_ELSE')
+    def Condicional(self,p):
         pass
 
     @_('')
-    def CONDICIONAL_ELSE(self,p):
+    def Condicional_ELSE(self,p):
         pass
 
     @_('ELSE Line ";"')
-    def CONDICIONAL_ELSE(self,p):
+    def Condicional_ELSE(self,p):
         pass
 
     @_('ELSE "{" Input "}"')
-    def CONDICIONAL_ELSE(self,p):
+    def Condicional_ELSE(self,p):
         pass
 
     # Declaraciones
@@ -594,6 +595,9 @@ class varAux():
         def __init__(self,t,tam):
             self.tipo = t
             self.tam = tam
+
+        def __str__(self):
+            print(self.tipo+" "+self.tam)
 
 def disyuncion(id1,id2,trad):
     text = id1 + "||" + id2
