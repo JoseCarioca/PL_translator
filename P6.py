@@ -26,8 +26,9 @@
 #   Assign -> empty | Assign ID '='
 #
 #   variables -> empty | listavars
-#   listavars -> listavars ',' TIPO ASTERISCO ID | TIPO ASTERISCO ID 
+#   listavars -> listavars ',' TIPO ASTERISCO ID posCorchete| TIPO ASTERISCO ID posCorchete
 #   ASTERISCO -> empty | ASTERISCO '*'
+#   posCorchete -> empty | CORCHETES
 #
 #   Condicional -> IF '(' Operation ')' ';' Condicional_ELSE | IF '(' Operation ')' Line ';' Condicional_ELSE | IF '(' Operation ')' '{' Input '}' Condicional_ELSE
 #   Condicional_ELSE -> empty | ELSE Line ';' | ELSE '{' Input '}'
@@ -491,19 +492,25 @@ class P1Parser(Parser):
                 self.Variables[(var[1],self.current_function)] = varAux(var[0],var[2])
         return p.listavars
 
-    @_('TIPO ASTERISCO ID')
+    @_('TIPO ASTERISCO ID posCorchete')
     def listavars(self,p):
+        print("posCor:" + str(p.posCorchete))
         cadena = p.TIPO
         if p.ASTERISCO != None:
             cadena = cadena + p.ASTERISCO
-        return [(cadena,p.ID,[1])]
+        if p.posCorchete != [1]:
+            cadena = cadena + "*" * len(p.posCorchete) #AVISO ESTO ES UN ARREGLO TEMPORAL
+        return [(cadena,p.ID,p.posCorchete)]
 
-    @_('listavars "," TIPO ASTERISCO ID')
+    @_('listavars "," TIPO ASTERISCO ID posCorchete')
     def listavars(self,p):
+        print("posCor:" + str(p.posCorchete))
         cadena = p.TIPO
         if p.ASTERISCO != None:
             cadena = cadena + p.ASTERISCO
-        return p.listavars+[(cadena,p.ID,[1])] #concatenado
+        if p.posCorchete != [1]:
+            cadena = cadena + "*" * len(p.posCorchete)
+        return p.listavars+[(cadena,p.ID,p.posCorchete)] #concatenado
     
     @_('')
     def ASTERISCO(self,p):
@@ -515,6 +522,14 @@ class P1Parser(Parser):
             return "*"
         else: 
             return str(p.ASTERISCO+"*")
+        
+    @_('')
+    def posCorchete(self,p):
+        return [1]
+
+    @_('CORCHETES')
+    def posCorchete(self,p):
+        return p.CORCHETES
 
     @_('ID')
     def fact(self,p):
@@ -554,16 +569,22 @@ class P1Parser(Parser):
                 for i in range(len(p.entradaID)):
                     (AMP,var) = p.entradaID[i]
                     aux = self.Variables.get((var, self.current_function))
-                    tipo = aux.tipo
-                    if AMP is not None:
-                        tipo = tipo + "*"
-                    if tipo != params[0][i][0]:
-                        print("Error: Variable " + tipo +" "+ var + " no coincide con funcion")
-                        self.ErrorFlag = True  
+                    if aux is None: #si no existe en ambito de funcion, mirar en global
+                        aux = self.Variables.get((var, "Global")) 
+                    if aux is None:
+                        print("Error: Variable" + var + " en llamada de " + p.ID + " no existen en su ambito")
+                        self.ErrorFlag = True
                     else:
-                        if all( (var, self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
-                            print("Error: Variables en llamada de " + p.ID + " no existen en su ambito")
-                            self.ErrorFlag = True
+                        tipo = aux.tipo
+                        if AMP is not None:
+                            tipo = tipo + "*"
+                        if tipo != params[0][i][0]:
+                            print(tipo)
+                            print(params[0][i][0])
+                            print("Error: Variable " + tipo +" "+ var + " no coincide con funcion")
+                            self.ErrorFlag = True  
+                        if aux.tam != params[0][i][2]:
+                            print("Warning: Tamaño de "+ tipo +" "+ var +" no coincide con " + params[0][i][0] + " " + params[0][i][1] + " de " + p.ID + ". Posible fuga de memoria")
                     i = i+1
             else:
                 print("Error: Nº Parametros de llamada no coinciden con Nº parametros de funcion " + str(p.ID))
