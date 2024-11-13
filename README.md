@@ -37,6 +37,13 @@ Cambios respecto a la P4:
 - Se ha modificado la funcion scanf para que acepte variables tipo puntero y varios parámetros en una misma llamada
 - Se añaden las reglas 'ASTERISCO' y 'AMPERSAN' para la declaración y llamada de variables respectivamente
 
+Decisiones de la P6:
+- Se permite llamar a funciones con argumentos de diferente tamaño y saltará un aviso al respecto.
+
+Cambios respecto a la P5:
+- Se añade la posibilidad de crear funciones con arreglos constantes como parametro
+
+
 
 Los tokens:
 -   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA_SCANF, CADENA, SCANF } 
