@@ -494,7 +494,6 @@ class P1Parser(Parser):
 
     @_('TIPO ASTERISCO ID posCorchete')
     def listavars(self,p):
-        print("posCor:" + str(p.posCorchete))
         cadena = p.TIPO
         if p.ASTERISCO != None:
             cadena = cadena + p.ASTERISCO

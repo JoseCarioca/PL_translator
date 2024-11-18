@@ -39,10 +39,11 @@ Cambios respecto a la P4:
 
 Decisiones de la P6:
 - Se permite llamar a funciones con argumentos de diferente tamaño y saltará un aviso al respecto.
+- Las declaraciones en los bloques condicionales se entienden del mismo ambito que éstas y NO de un nuevo ámbito temporal (ambito if-else)
 
 Cambios respecto a la P5:
 - Se añade la posibilidad de crear funciones con arreglos constantes como parametro
-
+- Se añaden las sentencias coondicionales IF-ELSE de bloque y de linea. Estos pueden ser anidados.
 
 
 Los tokens:
