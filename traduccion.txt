@@ -1,25 +1,32 @@
-!1
-!1||0
-2+a
-b+3
-!c
-a!=b
-(a!=b)
-0<=(a!=b)
-(0<=(a!=b))
-!c*(0<=(a!=b))
-c+1
-(c+1)
--b
-2/-b
-a*2/-b
-(a*2/-b)
-!(a*2/-b)
-b/!(a*2/-b)
-(c+1)-b/!(a*2/-b)
-!c*(0<=(a!=b))>=(c+1)-b/!(a*2/-b)
-c==a
-a>=c
-a>=c
-b&&c
-a||b&&c
+main:
+    pushl %ebp
+    movl %esp, %ebp
+
+    pushl $3
+
+    pushl $2
+
+    popl %ebx
+    popl %eax
+    addl %ebx, %eax
+    pushl %eax
+
+	##scanf
+	pushl b
+	leal -4(%ebp), %eax
+	pushl %eax
+	pushl $s1
+	call scanf
+	addl 12, %esp
+
+	##printf
+	pushl -4(%ebp)
+	pushl $s2
+	call printf
+
+    pushl $0
+
+    popl %eax
+    movl %ebp, %esp
+    popl %ebp
+    ret

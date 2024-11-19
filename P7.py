@@ -113,6 +113,7 @@ class P1Parser(Parser):
         self.Variables = {}
         self.Funciones = {}
         self.Traduccion = ""
+        self.cadenas = 0
     
     # Error
     def error(self, t):
@@ -222,6 +223,11 @@ class P1Parser(Parser):
             print("Error: Faltan las variables a imprimir en el printf")
             self.ErrorFlag = True
 
+        self.cadenas += 1
+        self.Traduccion += "\n\t#printf"
+        self.Traduccion += "\n\tpushl $s" + str(self.cadenas)
+        self.Traduccion += "\n\tcall printf\n"
+
     @_('PRINTF "(" CADENA "," AuxPrintf ")"')
     def Line(self,p):
         lpalabras = re.findall(r'%(u|d|i)',p.CADENA)
@@ -237,6 +243,19 @@ class P1Parser(Parser):
                     print("Error: Variables en el printf no existen en su ambito")
                     self.ErrorFlag = True
 
+        self.Traduccion += "\n\t##printf"
+        for var in p.AuxPrintf:
+            aux = self.Variables.get( (var, self.current_function))
+            if aux is not None:
+                self.Traduccion += "\n\tpushl " + str(aux.registro) + "(%ebp)"
+            else:
+                aux = self.Variables.get( (var, "Global"))
+                self.Traduccion += "\n\tpushl " + str(var)
+
+        self.cadenas += 1
+        self.Traduccion += "\n\tpushl $s" + str(self.cadenas)
+        self.Traduccion += "\n\tcall printf\n"
+
     @_('SCANF "(" CADENA_SCANF "," AuxScanf ")"')
     def Line(self,p):
         entrada = re.findall(r'%(u|d|i)',p.CADENA_SCANF)
@@ -248,6 +267,22 @@ class P1Parser(Parser):
         else:
             print("Error: No se usan el mismo numero de variables que se le pasa al scanf")
             self.ErrorFlag = True
+
+        self.cadenas += 1
+        self.Traduccion += "\n\t##scanf"
+        for var in p.AuxScanf:
+            aux = self.Variables.get( (var, self.current_function))
+            if aux is not None:
+                self.Traduccion += "\n\tleal " + str(aux.registro) + "(%ebp), %eax"
+                self.Traduccion += "\n\tpushl %eax" 
+            else:
+                aux = self.Variables.get( (var, "Global"))
+                self.Traduccion += "\n\tpushl " + str(var) #id de var
+
+        self.Traduccion += "\n\tpushl $s" + str(self.cadenas)
+        self.Traduccion += "\n\tcall scanf"
+        self.Traduccion += "\n\taddl " + str( (len(p.AuxScanf)+1) * 4 ) + ", %esp\n"
+        
 
     # Auxiliar para PRINTF
     @_('AuxPrintf "," ID')
@@ -645,6 +680,7 @@ class varAux():
         def __init__(self,t,tam):
             self.tipo = t
             self.tam = tam
+            self.registro = -4 # temporal para probar
 
         def __str__(self):
             print(self.tipo+" "+self.tam)
