@@ -258,6 +258,34 @@ class P1Parser(Parser):
         self.Traduccion += "\n\tpushl $s" + str(self.cadenas)
         self.Traduccion += "\n\tcall printf\n"
 
+    @_('PRINTF "(" CADENA_SCANF "," AuxPrintf ")"')
+    def Line(self,p):
+        lpalabras = re.findall(r'%(u|d|i)',p.CADENA_SCANF)
+        if not len(lpalabras):
+                print("Error: Tipo a recibir no coincide con tipo de variable en printf")
+                self.ErrorFlag = True
+        elif len(lpalabras) != len(p.AuxPrintf):
+            print("Error: No se usan el mismo numero de variables que se le pasa al printf")
+            self.ErrorFlag = True
+        else:
+            for var in p.AuxPrintf:
+                if all((var,self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
+                    print("Error: Variables en el printf no existen en su ambito")
+                    self.ErrorFlag = True
+        
+        self.Traduccion += "\n\t##printf"
+        for var in p.AuxPrintf:
+            aux = self.Variables.get( (var, self.current_function))
+            if aux is not None:
+                self.Traduccion += "\n\tpushl " + str(aux.registro) + "(%ebp)"
+            else:
+                aux = self.Variables.get( (var, "Global"))
+                self.Traduccion += "\n\tpushl " + str(var)
+
+        self.cadenas += 1
+        self.Traduccion += "\n\tpushl $s" + str(self.cadenas)
+        self.Traduccion += "\n\tcall printf\n"
+
     @_('SCANF "(" CADENA_SCANF "," AuxScanf ")"')
     def Line(self,p):
         entrada = re.findall(r'%(u|d|i)',p.CADENA_SCANF)
@@ -363,7 +391,7 @@ class P1Parser(Parser):
         self.ebp += 4
         self.Traduccion += "## Declaracion " + p.TIPO_ID[1] + "\n"
         self.Traduccion += "    subl $4, %esp\n"
-        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],self.ebp)]
+        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],-self.ebp)]
 
     @_('TIPO_ID CORCHETES')
     def Declaracion(self,p):
@@ -376,7 +404,7 @@ class P1Parser(Parser):
         self.Traduccion += "    subl $4, %esp\n"
         self.Traduccion += "    popl %eax\n"
         self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(ebp)\n"
-        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],self.ebp)]
+        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],-self.ebp)]
     
     @_('TIPO_ID ","')
     def Declaracion2(self,p):
@@ -384,7 +412,7 @@ class P1Parser(Parser):
         self.ebp += 4
         self.Traduccion += "## Declaracion " + p.TIPO_ID[1] + "\n"
         self.Traduccion += "    subl $4, %esp\n"
-        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],self.ebp)]
+        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],-self.ebp)]
 
     @_('TIPO_ID CORCHETES ","')
     def Declaracion2(self,p):
@@ -398,7 +426,7 @@ class P1Parser(Parser):
         self.Traduccion += "    subl $4, %esp\n"
         self.Traduccion += "    popl %eax\n"
         self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(ebp)\n"
-        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],self.ebp)]
+        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],-self.ebp)]
 
     @_('Declaracion2 Declaracion3 ","')
     def Declaracion2(self,p):
@@ -409,7 +437,7 @@ class P1Parser(Parser):
         self.ebp += 4
         self.Traduccion += "## Declaracion " + p.ID + "\n"
         self.Traduccion += "    subl $4, %esp\n"
-        return [(self.current_tipo,p.ID,[1],self.ebp)]
+        return [(self.current_tipo,p.ID,[1],-self.ebp)]
 
     @_('ID CORCHETES')
     def Declaracion3(self,p):
@@ -422,7 +450,7 @@ class P1Parser(Parser):
         self.Traduccion += "    subl $4, %esp\n"
         self.Traduccion += "    popl %eax\n"
         self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(ebp)\n"
-        return [(self.current_tipo,p.ID,[1],self.ebp)]
+        return [(self.current_tipo,p.ID,[1],-self.ebp)]
 
     @_('TIPO ID')
     def TIPO_ID(self,p):
