@@ -47,6 +47,8 @@ Cambios respecto a la P5:
 
 - Decisiones de la P7:
 - Se añada un contador al parser llamado ebp para indicar que registro esta libre en ese ambito a la hora de traducir
+- se añade una regla para aceptar printf con cadenas del tipo CADENA_SCANF
+- Las variables globales no se traducen de momento (esto abarca las cadenas de printf y scanf)
 
 Cambios respecto a la P6:
 - Se traducen operaciones aritmeticas
