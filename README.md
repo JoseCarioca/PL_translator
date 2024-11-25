@@ -45,6 +45,14 @@ Cambios respecto a la P5:
 - Se añade la posibilidad de crear funciones con arreglos constantes como parametro
 - Se añaden las sentencias coondicionales IF-ELSE de bloque y de linea. Estos pueden ser anidados.
 
+- Decisiones de la P7:
+- Se añada un contador al parser llamado ebp para indicar que registro esta libre en ese ambito a la hora de traducir
+
+Cambios respecto a la P6:
+- Se traducen operaciones aritmeticas
+- Se traducen declaraciones
+- Se traducen preproceso y postproceso de las funciones
+- Se traduce printf y scanf
 
 Los tokens:
 -   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA_SCANF, CADENA, SCANF } 
