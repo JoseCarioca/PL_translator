@@ -113,6 +113,7 @@ class P1Parser(Parser):
         self.Variables = {}
         self.Funciones = {}
         self.Traduccion = ""
+        self.ebp = 0
         self.cadenas = 0
     
     # Error
@@ -137,7 +138,7 @@ class P1Parser(Parser):
                 print("No puedes declarar variables con el mismo nombre en el mismo ámbito.")
                 self.ErrorFlag = True
             else:
-                self.Variables[(var[1],"Global")] = varAux(var[0],var[2])
+                self.Variables[(var[1],"Global")] = varAux(var[0],var[2],var[3])
 
     @_('Global Funcion')
     def Global(self,p):
@@ -179,6 +180,7 @@ class P1Parser(Parser):
         elif isinstance(p[-1], str):
             self.current_function = p[-1]
 
+        self.ebp = 0
         self.Traduccion += self.current_function + ":\n"
         self.Traduccion += "    pushl %ebp\n"
         self.Traduccion += "    movl %esp, %ebp\n"
@@ -214,7 +216,7 @@ class P1Parser(Parser):
                     print("Variable '" + var[1] + "' ya declarada en '" + self.current_function + "' previamente")
                     self.ErrorFlag = True
                 else:
-                    self.Variables[(var[1],self.current_function)] = varAux(var[0],var[2])
+                    self.Variables[(var[1],self.current_function)] = varAux(var[0],var[2],var[3])
         return p.Declaracion
     
     @_('PRINTF "(" CADENA ")"')
@@ -222,7 +224,7 @@ class P1Parser(Parser):
         if re.findall(r'\%[a-z]',p.CADENA):
             print("Error: Faltan las variables a imprimir en el printf")
             self.ErrorFlag = True
-
+        
         self.cadenas += 1
         self.Traduccion += "\n\t#printf"
         self.Traduccion += "\n\tpushl $s" + str(self.cadenas)
@@ -242,7 +244,7 @@ class P1Parser(Parser):
                 if all((var,self.current_function) != (id,ambito) for (id,ambito) in self.Variables.keys()) and all((var,"Global") != (id,ambito) for (id,ambito) in self.Variables.keys()):
                     print("Error: Variables en el printf no existen en su ambito")
                     self.ErrorFlag = True
-
+        
         self.Traduccion += "\n\t##printf"
         for var in p.AuxPrintf:
             aux = self.Variables.get( (var, self.current_function))
@@ -282,7 +284,6 @@ class P1Parser(Parser):
         self.Traduccion += "\n\tpushl $s" + str(self.cadenas)
         self.Traduccion += "\n\tcall scanf"
         self.Traduccion += "\n\taddl " + str( (len(p.AuxScanf)+1) * 4 ) + ", %esp\n"
-        
 
     # Auxiliar para PRINTF
     @_('AuxPrintf "," ID')
@@ -359,29 +360,45 @@ class P1Parser(Parser):
     
     @_('TIPO_ID')
     def Declaracion(self,p):
-        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1])]
+        self.ebp += 4
+        self.Traduccion += "## Declaracion " + p.TIPO_ID[1] + "\n"
+        self.Traduccion += "    subl $4, %esp\n"
+        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],self.ebp)]
 
     @_('TIPO_ID CORCHETES')
     def Declaracion(self,p):
-        return [(p.TIPO_ID[0]+len(p.CORCHETES)*"*",p.TIPO_ID[1],p.CORCHETES)]
+        return [(p.TIPO_ID[0]+len(p.CORCHETES)*"*",p.TIPO_ID[1],p.CORCHETES,0)]
     
     @_('TIPO_ID "=" Operation')
     def Declaracion(self,p):
-        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1])]
+        self.ebp += 4
+        self.Traduccion += "## Declaracion " + p.TIPO_ID[1] + "\n"
+        self.Traduccion += "    subl $4, %esp\n"
+        self.Traduccion += "    popl %eax\n"
+        self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(ebp)\n"
+        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],self.ebp)]
     
     @_('TIPO_ID ","')
     def Declaracion2(self,p):
         self.current_tipo = p.TIPO_ID[0]
-        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1])]
+        self.ebp += 4
+        self.Traduccion += "## Declaracion " + p.TIPO_ID[1] + "\n"
+        self.Traduccion += "    subl $4, %esp\n"
+        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],self.ebp)]
 
     @_('TIPO_ID CORCHETES ","')
     def Declaracion2(self,p):
         self.current_tipo = p.TIPO_ID[0]
-        return [(p.TIPO_ID[0]+len(p.CORCHETES)*"*",p.TIPO_ID[1],p.CORCHETES)]
+        return [(p.TIPO_ID[0]+len(p.CORCHETES)*"*",p.TIPO_ID[1],p.CORCHETES,0)]
 
     @_('TIPO_ID "=" Operation ","')
     def Declaracion2(self,p):
-        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1])]
+        self.ebp += 4
+        self.Traduccion += "## Declaracion " + p.TIPO_ID[1] + "\n"
+        self.Traduccion += "    subl $4, %esp\n"
+        self.Traduccion += "    popl %eax\n"
+        self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(ebp)\n"
+        return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],self.ebp)]
 
     @_('Declaracion2 Declaracion3 ","')
     def Declaracion2(self,p):
@@ -389,15 +406,23 @@ class P1Parser(Parser):
     
     @_('ID')
     def Declaracion3(self,p):
-        return [(self.current_tipo,p.ID,[1])]
+        self.ebp += 4
+        self.Traduccion += "## Declaracion " + p.ID + "\n"
+        self.Traduccion += "    subl $4, %esp\n"
+        return [(self.current_tipo,p.ID,[1],self.ebp)]
 
     @_('ID CORCHETES')
     def Declaracion3(self,p):
-        return [(self.current_tipo+len(p.CORCHETES)*"*",p.ID,p.CORCHETES)]
+        return [(self.current_tipo+len(p.CORCHETES)*"*",p.ID,p.CORCHETES,0)]
 
     @_('ID "=" Operation')
     def Declaracion3(self,p):
-        return [(self.current_tipo,p.ID,[1])]
+        self.ebp += 4
+        self.Traduccion += "## Declaracion " + p.ID + "\n"
+        self.Traduccion += "    subl $4, %esp\n"
+        self.Traduccion += "    popl %eax\n"
+        self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(ebp)\n"
+        return [(self.current_tipo,p.ID,[1],self.ebp)]
 
     @_('TIPO ID')
     def TIPO_ID(self,p):
@@ -485,7 +510,7 @@ class P1Parser(Parser):
 
     @_('prodOp "+" addOp')
     def addOp(self,p):
-        (text,self.Traduccion) = suma(self.Traduccion)
+        (text,self.Traduccion) = suma(p.prodOp,p.addOp,self.Traduccion)
         return text
 
     @_('prodOp "-" addOp')
@@ -537,7 +562,7 @@ class P1Parser(Parser):
                 print("Variable '" + var + "' ya declarada en '" + self.current_function + "' previamente")
                 self.ErrorFlag = True
             else:
-                self.Variables[(var[1],self.current_function)] = varAux(var[0],var[2])
+                self.Variables[(var[1],self.current_function)] = varAux(var[0],var[2],var[3])
         return p.listavars
 
     @_('TIPO ASTERISCO ID posCorchete')
@@ -581,7 +606,8 @@ class P1Parser(Parser):
     @_('ID')
     def fact(self,p):
         i = str(p.ID)
-        self.Traduccion += "\n    pushl " + i + "\n"
+        self.Traduccion += "\n"
+        self.Traduccion += "pushl " + i + "\n"
         return i
     
     @_('ID CORCHETES')
@@ -605,7 +631,8 @@ class P1Parser(Parser):
     @_('NUM')
     def fact(self,p):
         n = str(p.NUM)
-        self.Traduccion += "\n    pushl $" + n + "\n"
+        self.Traduccion += "\n"
+        self.Traduccion += "\tpushl $" + n + "\n"
         return n
     
     @_('fcall')
@@ -677,10 +704,10 @@ class P1Parser(Parser):
             self.ErrorFlag = True
 
 class varAux():
-        def __init__(self,t,tam):
+        def __init__(self,t,tam,n):
             self.tipo = t
             self.tam = tam
-            self.registro = -4 # temporal para probar
+            self.registro = n
 
         def __str__(self):
             print(self.tipo+" "+self.tam)
@@ -715,40 +742,40 @@ def menor_o_igual(id1,id2,trad):
     #trad += text + "\n"
     return (text,trad)
 
-def suma(trad):
-    text = "\n"
-    text += "    popl %ebx\n"
-    text += "    popl %eax\n"
-    text += "    addl %ebx, %eax\n"
-    text += "    pushl %eax\n"
+def suma(id1,id2,trad):
+    text = "\n## Suma " + id1 + " " + id2 + "\n"
+    text += "\tpopl %ebx\n"
+    text += "\tpopl %eax\n"
+    text += "\taddl %ebx, %eax\n"
+    text += "\tpushl %eax\n"
     trad += text
     return (text,trad)
 
 def resta(id1,id2,trad):
-    text = "\n"
-    text += "    popl %ebx\n"
-    text += "    popl %eax\n"
-    text += "    subl %ebx, %eax\n"
-    text += "    pushl %eax\n"
+    text = "\n## Resta " + id1 + " " + id2 + "\n"
+    text += "\tpopl %ebx\n"
+    text += "\tpopl %eax\n"
+    text += "\tsubl %ebx, %eax\n"
+    text += "\tpushl %eax\n"
     trad += text
     return (text,trad)
 
 def multiplicacion(id1,id2,trad):
-    text = "\n"
-    text += "    popl %ebx\n"
-    text += "    popl %eax\n"
-    text += "    imull %ebx, %eax\n"
-    text += "    pushl %eax\n"
+    text = "\n## Multiplicacion " + id1 + " " + id2 + "\n"
+    text += "\tpopl %ebx\n"
+    text += "\tpopl %eax\n"
+    text += "\timull %ebx, %eax\n"
+    text += "\tpushl %eax\n"
     trad += text
     return (text,trad)
 
 def division(id1,id2,trad):
-    text = "\n"
-    text += "    popl %ebx\n"
-    text += "    popl %eax\n"
-    text += "    cdq\n"
-    text += "    divl %ebx"
-    text += "    pushl %eax\n"
+    text = "\n## Division " + id1 + " " + id2 + "\n"
+    text += "\tpopl %ebx\n"
+    text += "\tpopl %eax\n"
+    text += "\tcdq\n"
+    text += "\tdivl %ebx"
+    text += "\tpushl %eax\n"
     trad += text
     return (text,trad)
 
