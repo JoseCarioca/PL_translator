@@ -45,7 +45,7 @@ Cambios respecto a la P5:
 - Se añade la posibilidad de crear funciones con arreglos constantes como parametro
 - Se añaden las sentencias coondicionales IF-ELSE de bloque y de linea. Estos pueden ser anidados.
 
-- Decisiones de la P7:
+Decisiones de la P7:
 - Se añada un contador al parser llamado ebp para indicar que registro esta libre en ese ambito a la hora de traducir
 - se añade una regla para aceptar printf con cadenas del tipo CADENA_SCANF
 - Las variables globales no se traducen de momento (esto abarca las cadenas de printf y scanf)
@@ -55,6 +55,16 @@ Cambios respecto a la P6:
 - Se traducen declaraciones
 - Se traducen preproceso y postproceso de las funciones
 - Se traduce printf y scanf
+
+Decisiones de la P8:
+- Matrices N dimensionales son aceptadas
+- Solo bucle While por ahora
+
+Cambios respecto a la P7:
+- Ya funciona la recursividad de funciones (se me olvido)
+- Se traducen asignaciones
+- Se tarducen llamadas a funciones
+- Se traducen vectores y matrices N dimensionales
 
 Los tokens:
 -   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA_SCANF, CADENA, SCANF } 
