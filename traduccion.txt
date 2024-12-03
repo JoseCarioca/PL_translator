@@ -1,30 +1,36 @@
 main:
     pushl %ebp
     movl %esp, %ebp
+    subl $24, %esp ##dec1 A
 
-    pushl $3
 
-    pushl $2
-
-    popl %ebx
     popl %eax
-    addl %ebx, %eax
-    pushl %eax
+    movl %eax, -4(%ebp)
 
-	##scanf
-	pushl b
-	leal -4(%ebp), %eax
+
+
+
+## Resta 5 7
+	pushl $5 
+	pushl $7 
+	popl %ebx
+	popl %eax
+	subl %ebx, %eax
 	pushl %eax
-	pushl $s1
-	call scanf
-	addl 12, %esp
 
-	##printf
-	pushl -4(%ebp)
-	pushl $s2
-	call printf
+## Suma A 
 
-    pushl $0
+	pushl -8(%ebp) 
+# 
+	popl %ebx
+	popl %eax
+	addl %ebx, %eax
+	pushl %eax
+## Declaracion Temp
+    subl $4, %esp
+    popl %eax
+    movl %eax, -28(%ebp)
+
 
     popl %eax
     movl %ebp, %esp

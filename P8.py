@@ -17,13 +17,13 @@
 #
 #   Declaracion -> TIPO_ID | TIPO_ID CORCHETES | TIPO_ID '=' Operation | Declaracion2 Declaracion3
 #   Declaracion2 -> TIPO_ID ',' | TIPO_ID CORCHETES ',' | TIPO_ID '=' Operation ',' | Declaracion2 Declaracion3 ','
-#   Declaracion3 -> ID | ID CORCHETES | ID '=' Operation
+#   Declaracion3 -> ID | ID CORCHETES | ID '=' Operation 
 #
 #   TIPO_ID -> TIPO ID
 #   TIPO -> INT
 #   CORCHETES -> '[' NUM ']' | Corchetes '[' NUM ']'
 #
-#   Assign -> empty | Assign ID '='
+#   Assign -> empty | Assign ID posCorchete '='
 #
 #   variables -> empty | listavars
 #   listavars -> listavars ',' TIPO ASTERISCO ID posCorchete| TIPO ASTERISCO ID posCorchete
@@ -47,6 +47,7 @@
 #
 #   prodOp -> fact '*' prodOp
 #   prodOp -> fact '/' prodOp
+#   prodOp -> fact
 #
 #   fact -> ID | ID CORCHETES | NUM | fcall | '!' fact | '-'fact | '(' Operation ')'
 #   fcall -> ID '(' entradaID ')'
@@ -55,6 +56,7 @@
 #   AMPERSAN -> empty | '&'
 
 
+import math
 from sly import Lexer,Parser
 import os, sys, re
 
@@ -393,18 +395,24 @@ class P1Parser(Parser):
         self.Traduccion += "## Declaracion " + p.TIPO_ID[1] + "\n"
         self.Traduccion += "    subl $4, %esp\n"
         return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],-self.ebp)]
-
+    
     @_('TIPO_ID CORCHETES')
     def Declaracion(self,p):
-        return [(p.TIPO_ID[0]+len(p.CORCHETES)*"*",p.TIPO_ID[1],p.CORCHETES,0)]
+        arrayEBP = self.ebp + 4 #posicion 0 del array para acceder a el
+
+        reserva = 4*math.prod(p.CORCHETES)
+        self.ebp += reserva
+        self.Traduccion += "    subl $" + str(reserva) + ", %esp ##dec1 " + p.TIPO_ID[1] + "\n"
+        return [(p.TIPO_ID[0]+len(p.CORCHETES)*"*", p.TIPO_ID[1], p.CORCHETES, -arrayEBP)]
     
+
     @_('TIPO_ID "=" Operation')
     def Declaracion(self,p):
         self.ebp += 4
         self.Traduccion += "## Declaracion " + p.TIPO_ID[1] + "\n"
         self.Traduccion += "    subl $4, %esp\n"
         self.Traduccion += "    popl %eax\n"
-        self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(ebp)\n"
+        self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(%ebp)\n"
         return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],-self.ebp)]
     
     @_('TIPO_ID ","')
@@ -417,8 +425,13 @@ class P1Parser(Parser):
 
     @_('TIPO_ID CORCHETES ","')
     def Declaracion2(self,p):
+        arrayEBP = self.ebp + 4 #posicion 0 del array para acceder a el
+
+        reserva = 4*math.prod(p.CORCHETES)
+        self.ebp += reserva
+        self.Traduccion += "    subl $" + str(reserva) + ", %esp ##dec2 " + p.TIPO_ID[1] + "\n"
         self.current_tipo = p.TIPO_ID[0]
-        return [(p.TIPO_ID[0]+len(p.CORCHETES)*"*",p.TIPO_ID[1],p.CORCHETES,0)]
+        return [(p.TIPO_ID[0]+len(p.CORCHETES)*"*",p.TIPO_ID[1],p.CORCHETES,-arrayEBP)]
 
     @_('TIPO_ID "=" Operation ","')
     def Declaracion2(self,p):
@@ -426,7 +439,7 @@ class P1Parser(Parser):
         self.Traduccion += "## Declaracion " + p.TIPO_ID[1] + "\n"
         self.Traduccion += "    subl $4, %esp\n"
         self.Traduccion += "    popl %eax\n"
-        self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(ebp)\n"
+        self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(%ebp)\n"
         return [(p.TIPO_ID[0],p.TIPO_ID[1],[1],-self.ebp)]
 
     @_('Declaracion2 Declaracion3 ","')
@@ -442,7 +455,10 @@ class P1Parser(Parser):
 
     @_('ID CORCHETES')
     def Declaracion3(self,p):
-        return [(self.current_tipo+len(p.CORCHETES)*"*",p.ID,p.CORCHETES,0)]
+        reserva = 4*math.prod(p.CORCHETES)
+        self.ebp += reserva
+        self.Traduccion += "    subl $" + str(reserva) + ", %esp ##dec3 " + p.ID + "\n"
+        return [(self.current_tipo+len(p.CORCHETES)*"*",p.ID,p.CORCHETES,-self.ebp)]
 
     @_('ID "=" Operation')
     def Declaracion3(self,p):
@@ -450,7 +466,7 @@ class P1Parser(Parser):
         self.Traduccion += "## Declaracion " + p.ID + "\n"
         self.Traduccion += "    subl $4, %esp\n"
         self.Traduccion += "    popl %eax\n"
-        self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(ebp)\n"
+        self.Traduccion += "    movl %eax, -" + str(self.ebp) + "(%ebp)\n"
         return [(self.current_tipo,p.ID,[1],-self.ebp)]
 
     @_('TIPO ID')
@@ -474,16 +490,38 @@ class P1Parser(Parser):
     def Assign(self,p):
         return ""
 
-    @_('Assign ID "="')
+    #se contemplan entero simple y arrays N-D
+    @_('Assign ID posCorchete "="')
     def Assign(self,p):
         if (p.ID,self.current_function) not in self.Variables.keys():
             print("Variable "+p.ID+" no declarada")
             self.ErrorFlag = True
-        
-        aux = self.Variables.get((p.ID,self.current_function))
+        else:
+            aux = self.Variables.get((p.ID,self.current_function))
+
+            apuntar = aux.registro
+            Dimension = len(aux.tam)
+            if len(p.posCorchete) != Dimension:
+                self.ErrorFlag = True
+            elif Dimension == 1:
+                if aux.tam[0] <= p.posCorchete[0] and p.posCorchete[0] > 1: # tam = [1] indice tipo entero simple y por tanto se puede acceder
+                    #posCorchetes si vacio devuelve [1] que indica llamar a entero simple
+                    self.ErrorFlag = True
+                    print("Acceso a " +p.ID + str(p.PosCorchete) + " fuera de rango.")
+                else:
+                    apuntar -= 4*(p.posCorchete[0] - 1)
+            elif Dimension > 1:
+                for dim, idx in zip(aux.tam, p.posCorchete):
+                    if dim <= idx:
+                        self.ErrorFlag = True
+                        print("Acceso a " +p.ID + str(p.PosCorchete) + " fuera de rango.")
+                        break
+                if not self.ErrorFlag: # si no ha saltado error, y bueno en general 
+                    apuntar -= linear_index(aux.tam,p.posCorchete)
+     
         texto = "\n"
         texto += "    popl %eax\n"
-        texto += "    movl %eax, " + str(aux.registro) + "(%ebp)\n"
+        texto += "    movl %eax, " + str(apuntar) + "(%ebp)\n"
         return texto
 
     # Operaciones Aritmetico-Logicas
@@ -571,6 +609,7 @@ class P1Parser(Parser):
 
     @_('fact')
     def prodOp(self,p):
+        #print(p.fact)
         return p.fact
 
     @_('"-" fact')
@@ -643,35 +682,71 @@ class P1Parser(Parser):
 
     @_('ID')
     def fact(self,p):
-        i = str(p.ID)
+        var = self.Variables.get((p.ID,self.current_function))
+        if var is None:
+            var = self.Variables.get((p.ID,self.current_function))
+            if var is not None:
+                i = p.ID #si la global existe
+            else:
+                print("Error: Variable "+p.ID+" no declarada")
+                self.ErrorFlag = True
+        else:
+            i = var.registro
+
         self.Traduccion += "\n"
-        self.Traduccion += "    pushl " + i + "\n"
-        return i
+        texto = "movl  " + str(i)
+        return [str(p.ID), texto]
     
     @_('ID CORCHETES')
     def fact(self,p):
-        var = self.Variables.get((p.ID,self.current_function)) or self.Variables.get((p.ID,"Global"))
-        if var == None:
-            print("Error: Variable "+p.ID+" no declarada")
-            self.ErrorFlag = True
-        elif len(p.CORCHETES) != len(var.tam):
-            print("Error: Variable "+p.ID+" tamaño incorrecto")
-            self.ErrorFlag = True
+        var = self.Variables.get((p.ID,self.current_function))
+        flagGlobal = False
+
+        if var is None:
+            var = self.Variables.get((p.ID,self.current_function))
+            if var is not None:
+                i = str(p.ID) #si la global existe
+                flagGlobal = True
+            else:
+                print("Error: Variable "+p.ID+" no declarada")
+                self.ErrorFlag = True
         else:
-            if p.CORCHETES != None:
-                for t in p.CORCHETES:
-                    for tam in var.tam:
-                        if tam <= t:
-                            print("Error: Posicion inalcanzable de "+p.ID)
+            if len(p.CORCHETES) != len(var.tam):
+                print("Error: Variable "+p.ID+" tamaño incorrecto")
+                self.ErrorFlag = True
+            else:
+                if var.tam == [1]:
+                    print(f"Error: {p.ID} no es tipo array")
+                    self.ErrorFlag = True
+                else:
+                    for tam, t in zip(var.tam, p.CORCHETES):  
+                        if t >= tam:  # Compara el índice con el tamaño máximo
+                            print(f"Error: Posición inalcanzable de {p.ID}")
                             self.ErrorFlag = True
-        return str(p.ID)
+                            break  
+              
+        if var is not None and not self.ErrorFlag:
+            if flagGlobal:
+                i += "+" + str(linear_index(var.tam,p.CORCHETES))
+                self.Traduccion += "\n"
+                #self.Traduccion += "\tmovl " + str(i) + "(%ebp), %eax\n"
+                texto = "\tpushl " + str(i)
+            else:
+                indice = linear_index(var.tam, p.CORCHETES)
+                i = var.registro - indice*4
+                self.Traduccion += "\n"
+                #self.Traduccion += "\tmovl " + str(i) + "(%ebp), %eax\n"
+                texto = "\tpushl " + str(i) + "(%ebp)"
+        #si da error no lo traduce... ver qué es mejor...
+
+        return [str(p.ID), texto]
 
     @_('NUM')
     def fact(self,p):
         n = str(p.NUM)
         self.Traduccion += "\n"
-        self.Traduccion += "\tpushl $" + n + "\n"
-        return n
+        texto =  "\tpushl $" + n
+        return [n, texto]
     
     @_('fcall')
     def fact(self,p):
@@ -758,7 +833,7 @@ class varAux():
             self.registro = n
 
         def __str__(self):
-            print(self.tipo+" "+self.tam)
+            print(self.tipo+" "+self.tam+" "+self.registro)
 
 def disyuncion(id1,id2,trad):
     text = id1 + "||" + id2
@@ -791,7 +866,9 @@ def menor_o_igual(id1,id2,trad):
     return (text,trad)
 
 def suma(id1,id2,trad):
-    text = "\n## Suma " + id1 + " " + id2 + "\n"
+    text = "\n## Suma " + id1[0] + " " + id2[0] + "\n"
+    text += id1[1] + " \n"
+    text += id2[1] + " \n"
     text += "\tpopl %ebx\n"
     text += "\tpopl %eax\n"
     text += "\taddl %ebx, %eax\n"
@@ -800,7 +877,9 @@ def suma(id1,id2,trad):
     return (text,trad)
 
 def resta(id1,id2,trad):
-    text = "\n## Resta " + id1 + " " + id2 + "\n"
+    text = "\n## Resta " + id1[0] + " " + id2[0] + "\n"
+    text += id1[1] + " \n"
+    text += id2[1] + " \n"
     text += "\tpopl %ebx\n"
     text += "\tpopl %eax\n"
     text += "\tsubl %ebx, %eax\n"
@@ -809,7 +888,9 @@ def resta(id1,id2,trad):
     return (text,trad)
 
 def multiplicacion(id1,id2,trad):
-    text = "\n## Multiplicacion " + id1 + " " + id2 + "\n"
+    text = "\n## Multiplicacion" + id1[0] + " " + id2[0] + "\n"
+    text += id1[1] + " \n"
+    text += id2[1] + " \n"
     text += "\tpopl %ebx\n"
     text += "\tpopl %eax\n"
     text += "\timull %ebx, %eax\n"
@@ -818,7 +899,9 @@ def multiplicacion(id1,id2,trad):
     return (text,trad)
 
 def division(id1,id2,trad):
-    text = "\n## Division " + id1 + " " + id2 + "\n"
+    text = "\n## Division " + id1[0] + " " + id2[0] + "\n"
+    text += id1[1] + " \n"
+    text += id2[1] + " \n"
     text += "\tpopl %ebx\n"
     text += "\tpopl %eax\n"
     text += "\tcdq\n"
@@ -842,6 +925,26 @@ def parentesis(id, trad):
     #trad += text + "\n"
     return (text,trad)
 
+"""Def auxiliar para calculo de indice Lineal de tamaño N"""
+def linear_index(dims, subindex):
+    """
+        dims (list): Lista de Dimension de array (empieza en 1)
+        subindex (list): Lista de indices pedidos (empieza en 0)
+
+    Returns:
+        int: Indice lineal para posicion en pila
+    """
+    stride = 1
+    linear_idx = 0
+
+    # Iterate from the last dimension to the first
+    for dim, idx in zip(reversed(dims), reversed(subindex)):
+        linear_idx += idx * stride
+        stride *= dim
+
+    return linear_idx
+
+
 if __name__ == '__main__':
    
     lexer = P1Lexer()
@@ -861,7 +964,7 @@ if __name__ == '__main__':
             file.write(parser.Traduccion)
         print("VARIABLES")
         for key,value in parser.Variables.items():
-            print("Variable: "+key[0]+" Ambito: "+key[1]+" Tipo: "+value.tipo+" Tamaño: "+str(value.tam))
+            print("Variable: "+key[0]+" Ambito: "+key[1]+" Tipo: "+value.tipo+" Tamaño: "+str(value.tam) +" EBP: "+str(value.registro) )
         print("\nFUNCIONES")
         for key,value in parser.Funciones.items():
             print("Funcion: "+key+" "+str(value))

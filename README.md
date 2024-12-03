@@ -59,9 +59,10 @@ Cambios respecto a la P6:
 Decisiones de la P8:
 - Matrices N dimensionales son aceptadas
 - Solo bucle While por ahora
+- De momento soluciones parciales y genericas de traducciones. Seguir mejorando
 
 Cambios respecto a la P7:
-- Ya funciona la recursividad de funciones (se me olvido)
+- Ya funciona la recursividad de funciones
 - Se traducen asignaciones
 - Se tarducen llamadas a funciones
 - Se traducen vectores y matrices N dimensionales
