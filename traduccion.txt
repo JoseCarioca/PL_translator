@@ -1,36 +1,25 @@
 main:
     pushl %ebp
     movl %esp, %ebp
-    subl $24, %esp ##dec1 A
 
-
+	pushl $2 
+## Declaracion A
+    subl $4, %esp
     popl %eax
     movl %eax, -4(%ebp)
 
-
-
-
-## Resta 5 7
-	pushl $5 
-	pushl $7 
-	popl %ebx
-	popl %eax
-	subl %ebx, %eax
-	pushl %eax
-
-## Suma A 
-
-	pushl -8(%ebp) 
-# 
-	popl %ebx
-	popl %eax
-	addl %ebx, %eax
-	pushl %eax
-## Declaracion Temp
+	pushl -4(%ebp)
+	popl %eax	cmpl $0, %eax
+	movl $1, %eax
+	je cond_final0 
+	movl $0, %eax
+cond_final0: 
+	pushl %eax## Declaracion b
     subl $4, %esp
     popl %eax
-    movl %eax, -28(%ebp)
+    movl %eax, -8(%ebp)
 
+	pushl $0 
 
     popl %eax
     movl %ebp, %esp
