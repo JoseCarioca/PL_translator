@@ -67,6 +67,17 @@ Cambios respecto a la P7:
 - Se tarducen llamadas a funciones
 - Se traducen vectores y matrices N dimensionales
 
+Decisiones de la P9:
+-revisar fallos arrastrados y remodelar algunos conceptos... falta trabajo
+- cadena_scanf deja de existir
+- se crean funciones auxiliares para evitar redundancia
+- se empieza a guardar informacion para declaracion de globales
+
+Cambios respecto a la P8:
+- se añaden operadores (-, !, ...)
+- la asignacion y lectura de globales ya funciona (hacer más pruebas)
+
+
 Los tokens:
 -   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA_SCANF, CADENA, SCANF } 
 - literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}','&'}
