@@ -2,7 +2,7 @@ A continuación se presenta una explicación de la gramática de este C reducido
 ** Gramática **
 
 Se permite:
--Declaración y asignación de varibales de tipo enteros y arreglos de cualquier dimensión (no hay un límite establecido).
+- Declaración y asignación de variables de tipo enteros y arreglos de cualquier dimensión (no hay un límite establecido).
 - Realizar operaciones aritmeticológicas básicas como: {+,-,*,/}, { == , !=, <=, >=}, negación y resta unaria.
 - Declaración y uso de funciones (tipo void y entero). 
 - No hay limitaciones en las declaraciones de globales / funciones, el orden puede ser cualquiera.
@@ -26,13 +26,13 @@ A partir de la gramática permitida, se escribe la traducción, la cual se encue
 
 Bondades:
 - La declaración de variables de cualquier tipo permitido se realiza con éxito en los ambitos de las funciones.
+- Declaracion, acceso y operaciones de arreglos de cualquier dimensión
 - Todas las operaciones se realizan correctamente, concatenaciones incluidas.
--...
-
+- Declaracion de funciones y llamadas a las mismas solo con paso por valor
+- Recursividad
 
 Limitaciones de la versión actual (sujeto a cambio):
 - No se realiza la traduccion de declaraciones globales.
 - Las cadenas constantes de scanf y printf no se guardan.
-- Los bloques anidados no se traducen correctamente.
--...
+- If-Else y Bucles While no se traducen correctamente.
 
