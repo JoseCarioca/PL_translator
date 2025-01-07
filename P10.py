@@ -1,18 +1,18 @@
 #   tokens = { ID, NUM, EQUAL, LE_EQ, GR_EQ, NOT_EQ, AND, OR, INT, VOID, RETURN, PRINTF, CADENA, SCANF, CADENA_SCANF, IF, ELSE} 
 #   literals = { '=', '!', '+', '-', '*', '/', ',', ';', '(', ')' ,'{', '}', '&', '[', ']'}
 #   
-#   Global -> empty | Declaracion ';' Global | Funcion  Global
+#   Global -> empty | Declaracion ';' Global | Funcion Global
 #
-#   Funcion -> TIPO_ID setCurrentFunction '(' variables ')' '{' Input RETURN Operation ';' '}'
-#   Funcion -> VOID ID setCurrentFunction '(' variables ')' '{' Input '}'
-#   setCurrentFunction -> empty
+#   Funcion -> TIPO_ID '(' variables ')' '{' Input RETURN Operation ';' '}'
+#   Funcion -> VOID ID '(' variables ')' '{' Input '}'
 #
 #   Input -> empty | Input Line ';' | Input Condicional | Input Bucle 
 #
 #   Line  -> Declaracion | Assign Operation | PRINTF '(' CADENA ')'
-#   | PRINTF '(' CADENA ',' AuxPrintf ')' | SCANF '(' CADENA_SCANF ','  AuxScanf ')' 
+#           | PRINTF '(' CADENA ',' AuxPrintf ')' | Line -> PRINTF '(' CADENA_SCANF ',' AuxPrintf ')' 
+#           | SCANF '(' CADENA_SCANF ','  AuxScanf ')' 
 #
-#   AuxPrintf -> ID | AuxPrintf ',' ID
+#   AuxPrintf -> ID posCorchete | AuxPrintf ',' ID posCorchete
 #   AuxScanf -> ID | '&' ID | AuxScanf ',' ID | AuxScanf ',' '&' ID
 #
 #   Declaracion -> TIPO_ID | TIPO_ID CORCHETES | TIPO_ID '=' Operation | Declaracion2 Declaracion3
@@ -35,13 +35,13 @@
 #
 #   Bucle -> WHILE '(' Operation ')' ';' | WHILE '(' Operation ')' Line ';' | WHILE '(' Operation ')' '{' Input '}'
 #
-#   Operation -> andOp | andOp '||' Operation
-#   andOp -> equalOp | equalOp '&&' andOp
+#   Operation -> andOp | andOp OR Operation
+#   andOp -> equalOp | equalOp AND andOp
 #   equalOp -> compOp | compOp equalSymbol equalOp
 #   compOp -> addOp | addOp compSymbol compOp
 #
-#   equalSymbol -> '==' | '!='
-#   compSymbol -> '>=' | '<='
+#   equalSymbol -> EQUAL | NOT_EQ
+#   compSymbol -> GR_EQ | LE_EQ
 #
 #   addOp -> prodOp '+' addOp
 #   addOp -> prodOp '-' addOp
@@ -54,7 +54,7 @@
 #   fact -> ID | ID CORCHETES | NUM | fcall | '!' fact | '-'fact | '(' Operation ')'
 #   fcall -> ID '(' entradaID ')'
 #   entradaID -> empty | listaID
-#   listaID -> AMPERSAN ID | listaID ',' AMPERSAN ID
+#   listaID -> AMPERSAN ID posCorchete | listaID ',' AMPERSAN ID posCorchete
 #   AMPERSAN -> empty | '&'
 
 
@@ -153,7 +153,6 @@ class P1Parser(Parser):
 
         self.Traduccion = self.tradGlobal + self.Traduccion
 
-    # Falta Traduccion
     @_('Declaracion ";" Global')
     def Global(self,p):
         for var in p.Declaracion:
@@ -532,7 +531,7 @@ class P1Parser(Parser):
         self.Traduccion += "\nstart_while" + str(self.while_tag) + ":\n"
 
     @_("")
-    def while_aux_1(self,p):
+    def while_aux_2(self,p):
         c = self.pila_while.pop()
         self.Traduccion += "\n"
         self.Traduccion += "\tpopl %eax\n"
@@ -542,7 +541,7 @@ class P1Parser(Parser):
 
     # Declaraciones
     @_('Declaracion2 Declaracion3')
-    def Declaracion(self,p):
+    def Declaracion(self,p):        
         return p.Declaracion2+p.Declaracion3
     
     @_('TIPO_ID')
