@@ -1,8 +1,17 @@
 
-int G[3];
-int main ()
+void fun (int *c) 
 {
-    int a,b,c;
-    a = b = c = 5;
-    return 0;
+    printf("Variable: %d ", c);
 }
+
+void empty() {}
+
+void main ()
+{
+    int Narray[2][3];
+    Narray[1][2];
+
+    int a = 4;
+    fun(&a);
+}
+

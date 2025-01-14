@@ -1,0 +1,162 @@
+	.file prueba.c
+	.section .rodata
+.LC1:
+	"%i"
+.LC2:
+	"1"
+.LC3:
+	"if2 %i"
+.LC4:
+	"var: %i"
+.LC5:
+	"sol: %i, a: %d"
+
+	section .data
+.lcomm b, 4
+.lcomm c, 4
+.lcomm g1, 120
+
+	.globl empty
+	.type empty, @function
+empty:
+	pushl %ebp
+	movl %esp, %ebp
+
+	movl %ebp, %esp
+	popl %ebp
+	ret
+	.globl fun
+	.type fun, @function
+fun:
+	pushl %ebp
+	movl %esp, %ebp
+
+	leal 4(%ebp), %eax
+	pushl %eax
+	pushl $LC1
+	call scanf
+	addl 8, %esp
+
+	pushl $10
+
+	pushl $1
+
+	popl %ebx
+	popl %eax
+	subl %ebx, %eax
+	pushl %eax
+
+	popl %eax
+	movl %ebp, %esp
+	popl %ebp
+	ret
+	.globl main
+	.type main, @function
+main:
+	pushl %ebp
+	movl %esp, %ebp
+
+	pushl $2
+
+	subl $36, %esp
+
+	pushl $2
+
+	popl %eax
+	movl %eax, -20(%ebp)
+	pushl -20(%ebp)
+
+	popl %eax
+
+	pushl $0
+
+	pushl $1
+
+	popl %ebx
+	popl %eax
+	cmpl &ebx,%eax
+	jne cond_false1
+	pushl &1
+	jmp cond_final1
+cond_false1:
+	pushl &0
+cond_final1:
+
+	popl %eax
+	cmpl &0,%eax
+	je else1
+
+	pushl $LC2
+	call printf
+	addl $4, %esp
+
+	jmp if_else_final1
+else1:
+
+	pushl $1
+
+	pushl $2
+
+	popl %ebx
+	popl %eax
+	addl %ebx, %eax
+	pushl %eax
+
+	subl $4, %esp
+	popl %eax
+	movl %eax, -40(%ebp)
+
+	pushl -40(%ebp)
+
+	pushl $5
+
+	popl %ebx
+	popl %eax
+	cmpl &ebx,%eax
+	jg cond_false3
+	pushl &1
+	jmp cond_final3
+cond_false3:
+	pushl &0
+cond_final3:
+
+	popl %eax
+	cmpl &0,%eax
+	je else2
+
+	pushl -44(%ebp)
+	pushl $LC3
+	call printf
+	addl $8, %esp
+
+	jmp if_else_final2
+else2:
+if_else_final2:
+if_else_final1:
+
+	pushl -44(%ebp)
+	pushl $LC4
+	call printf
+	addl $8, %esp
+
+	pushl -44(%ebp)
+	call fun
+	addl $4 ,%esp
+	pushl %eax
+
+	subl $4, %esp
+	popl %eax
+	movl %eax, -44(%ebp)
+
+	pushl -48(%ebp)
+	pushl -44(%ebp)
+	pushl $LC5
+	call printf
+	addl $12, %esp
+
+	pushl $0
+
+	popl %eax
+	movl %ebp, %esp
+	popl %ebp
+	ret

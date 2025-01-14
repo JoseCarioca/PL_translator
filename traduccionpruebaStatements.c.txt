@@ -1,0 +1,177 @@
+	.file prueba.c
+	.section .rodata
+.LC1:
+	"%d\n"
+.LC2:
+	"var %d still exists.\n"
+
+	section .data
+
+	.globl main
+	.type main, @function
+main:
+	pushl %ebp
+	movl %esp, %ebp
+
+	subl $4, %esp
+
+	subl $4, %esp
+
+	pushl $0
+
+	popl %eax
+	movl %eax, -8(%ebp)
+	pushl -8(%ebp)
+
+	popl %eax
+	movl %eax, -4(%ebp)
+	pushl -4(%ebp)
+
+	popl %eax
+
+start_while1:
+
+	pushl -4(%ebp)
+
+	pushl $10
+
+	popl %ebx
+	popl %eax
+	cmpl &ebx,%eax
+	jg cond_false1
+	pushl &1
+	jmp cond_final1
+cond_false1:
+	pushl &0
+cond_final1:
+
+	popl %eax
+	cmpl $0, %eax
+	jne final_while1
+
+	pushl -4(%ebp)
+
+	pushl $1
+
+	popl %ebx
+	popl %eax
+	addl %ebx, %eax
+	pushl %eax
+
+	popl %eax
+	movl %eax, -4(%ebp)
+	pushl -4(%ebp)
+
+	popl %eax
+
+	jmp start_while1
+final_while1:
+
+	pushl -8(%ebp)
+
+	pushl $10
+
+	popl %ebx
+	popl %eax
+	cmpl &ebx,%eax
+	jg cond_false2
+	pushl &1
+	jmp cond_final2
+cond_false2:
+	pushl &0
+cond_final2:
+
+	popl %eax
+	cmpl &0,%eax
+	je else1
+
+	pushl -8(%ebp)
+
+	pushl -4(%ebp)
+
+	popl %ebx
+	popl %eax
+	addl %ebx, %eax
+	pushl %eax
+
+	pushl $0
+
+	popl %ebx
+	popl %eax
+	cmpl &ebx,%eax
+	jl cond_false3
+	pushl &1
+	jmp cond_final3
+cond_false3:
+	pushl &0
+cond_final3:
+
+	popl %eax
+	cmpl &0,%eax
+	je else2
+
+	pushl $0
+
+	subl $4, %esp
+	popl %eax
+	movl %eax, -12(%ebp)
+
+start_while2:
+
+	pushl -12(%ebp)
+
+	pushl $5
+
+	popl %ebx
+	popl %eax
+	cmpl &ebx,%eax
+	jg cond_false4
+	pushl &1
+	jmp cond_final4
+cond_false4:
+	pushl &0
+cond_final4:
+
+	popl %eax
+	cmpl $0, %eax
+	jne final_while2
+
+	pushl -16(%ebp)
+	pushl $LC1
+	call printf
+	addl $8, %esp
+
+	pushl -12(%ebp)
+
+	pushl $2
+
+	popl %ebx
+	popl %eax
+	imull %ebx, %eax
+	pushl %eax
+
+	popl %eax
+	movl %eax, -12(%ebp)
+	pushl -12(%ebp)
+
+	popl %eax
+
+	jmp start_while2
+final_while2:
+
+	jmp if_else_final2
+else2:
+if_else_final2:
+
+	jmp if_else_final1
+else1:
+if_else_final1:
+
+	pushl -16(%ebp)
+	pushl $LC2
+	call printf
+	addl $8, %esp
+
+	movl %ebp, %esp
+	popl %ebp
+	ret

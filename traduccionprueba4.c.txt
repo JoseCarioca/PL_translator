@@ -1,0 +1,55 @@
+	"Variable: %d "
+.LC1:
+
+.section text
+	.file prueba.c
+	.globl fun
+	.type fun, @function
+fun:
+	pushl %ebp
+	movl %esp, %ebp
+
+	pushl 0(%ebp)
+	pushl $LC1
+	call printf
+	addl $8, %esp
+
+	movl %ebp, %esp
+	popl %ebp
+	ret
+	.globl empty
+	.type empty, @function
+empty:
+	pushl %ebp
+	movl %esp, %ebp
+
+	movl %ebp, %esp
+	popl %ebp
+	ret
+	.globl main
+	.type main, @function
+main:
+	pushl %ebp
+	movl %esp, %ebp
+
+	subl $24, %esp
+
+	pushl -24(%ebp)
+
+	popl %eax
+
+	pushl $4
+
+	subl $4, %esp
+	popl %eax
+	movl %eax, -28(%ebp)
+
+	pushl -32(%ebp)
+	call fun
+	addl $4 ,%esp
+
+	popl %eax
+
+	movl %ebp, %esp
+	popl %ebp
+	ret
