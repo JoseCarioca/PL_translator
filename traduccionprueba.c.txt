@@ -1,5 +1,15 @@
 	.file prueba.c
 	.section .rodata
+.LC1:
+	"%i"
+.LC2:
+	"1"
+.LC3:
+	"if2 %i"
+.LC4:
+	"var: %i"
+.LC5:
+	"sol: %i, a: %d"
 
 	section .data
 .lcomm g1, 120

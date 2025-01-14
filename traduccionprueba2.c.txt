@@ -1,0 +1,89 @@
+	.file prueba.c
+	.section .rodata
+.LC1:
+	"Dentro del if"
+.LC2:
+	"%d%i"
+.LC3:
+	"Hola Mundo %d %u prueba %i"
+
+	section .data
+.lcomm global, 4
+.lcomm v, 8
+
+	.globl main
+	.type main, @function
+main:
+	pushl %ebp
+	movl %esp, %ebp
+
+	pushl $1
+
+	pushl $0
+
+	subl $4, %esp
+
+	subl $4, %esp
+	popl %eax
+	movl %eax, -8(%ebp)
+
+	subl $4, %esp
+	popl %eax
+	movl %eax, -12(%ebp)
+
+	pushl $2
+
+	pushl -4(%ebp)
+
+	popl %ebx
+	popl %eax
+	addl %ebx, %eax
+	pushl %eax
+
+	subl $4, %esp
+	popl %eax
+	movl %eax, -16(%ebp)
+
+	subl $16, %esp
+
+	subl $12, %esp
+
+	pushl $v + 0000
+
+	popl %eax
+
+	pushl -4(%ebp)
+
+	popl %eax
+	cmpl &0,%eax
+	je else1
+
+	pushl $LC1
+	call printf
+	addl $4, %esp
+
+	jmp if_else_final1
+else1:
+if_else_final1:
+
+	leal -4(%ebp), %eax
+	pushl %eax
+	leal -8(%ebp), %eax
+	pushl %eax
+	pushl $LC2
+	call scanf
+	addl 12, %esp
+
+	pushl $global
+	pushl -8(%ebp)
+	pushl -16(%ebp)
+	pushl $LC3
+	call printf
+	addl $16, %esp
+
+	pushl -4(%ebp)
+
+	popl %eax
+	movl %ebp, %esp
+	popl %ebp
+	ret

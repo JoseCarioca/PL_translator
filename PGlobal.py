@@ -147,11 +147,7 @@ class P1Parser(Parser):
         self.tradGlobal += "\t.section .rodata\n"
 
         # Agregar las cadenas en el orden correcto
-        for i, cadena in enumerate(self.cadenas, start=1):
-            self.tradGlobal += f".LC{i}:\n"
-            self.tradGlobal += f"\t{cadena}\n"
         
-        self.tradGlobal += "\n"
         # Combinar con el resto de la traducción
         #self.Traduccion = self.tradGlobal + self.Traduccion
 
@@ -925,6 +921,11 @@ class P1Parser(Parser):
             self.ErrorFlag = True
         
         self.sectiondata = "\tsection .data\n" + self.sectiondata + "\n"
+        for i, cadena in enumerate(self.cadenas, start=1):
+            self.tradGlobal += f".LC{i}:\n"
+            self.tradGlobal += f"\t{cadena}\n"
+        
+        self.tradGlobal += "\n"
         self.Traduccion = self.tradGlobal + self.sectiondata + self.Traduccion
 
 class varAux():
