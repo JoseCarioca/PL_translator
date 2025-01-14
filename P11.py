@@ -155,7 +155,7 @@ class P1Parser(Parser):
         # Combinar con el resto de la traducción
         #self.Traduccion = self.tradGlobal + self.Traduccion
 
-    @_('Declaracion ";" Global')
+    @_('Global Declaracion ";"')
     def Global(self,p):
         for var in p.Declaracion:
             if var[3] == 0:
@@ -189,7 +189,7 @@ class P1Parser(Parser):
 
         return p.Declaracion
 
-    @_('Funcion Global')
+    @_('Global Funcion')
     def Global(self,p):
         pass
 
@@ -616,7 +616,10 @@ class P1Parser(Parser):
         var,flagGlobal = variable_in_ambito(self.Variables, p.ID, self.current_function, self.ErrorFlag)
         if var is not None:
             if not self.ErrorFlag:
-                apuntar = var.registro
+                if flagGlobal:
+                    apuntar = 0
+                else:
+                    apuntar = var.registro
                 if len(p.posCorchete) != len(var.tam):
                     print("No se ha proporcionado indices a " + p.ID + ".")
                     self.ErrorFlag = True
@@ -634,8 +637,12 @@ class P1Parser(Parser):
                 if flagGlobal:
                     texto = "\n"
                     texto += "\tpopl %eax\n"
-                    texto += "\tmovl %eax, $" + p.ID + str(apuntar) + "\n"
-                    texto += "\tpushl $" + p.ID + str(apuntar) + "\n"
+                    if var.tam != [1]:
+                        texto += "\tmovl %eax, $" + p.ID + str(apuntar) + "\n"
+                        texto += "\tpushl $" + p.ID + str(apuntar) + "\n"
+                    else:
+                        texto += "\tmovl %eax, $" + p.ID + "\n"
+                        texto += "\tpushl $" + p.ID + "\n"
                 else:
                     texto = "\n"
                     texto += "\tpopl %eax\n"

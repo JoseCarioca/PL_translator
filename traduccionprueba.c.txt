@@ -1,20 +1,10 @@
 	.file prueba.c
 	.section .rodata
-.LC1:
-	"%i"
-.LC2:
-	"1"
-.LC3:
-	"if2 %i"
-.LC4:
-	"var: %i"
-.LC5:
-	"sol: %i, a: %d"
 
 	section .data
+.lcomm g1, 120
 .lcomm b, 4
 .lcomm c, 4
-.lcomm g1, 120
 
 	.globl empty
 	.type empty, @function
@@ -58,13 +48,17 @@ main:
 
 	pushl $2
 
-	subl $36, %esp
+	popl %eax
+	movl %eax, $b
+	pushl $b
+
+	popl %eax
 
 	pushl $2
 
 	popl %eax
-	movl %eax, -20(%ebp)
-	pushl -20(%ebp)
+	movl %eax, $g1-84
+	pushl $g1-84
 
 	popl %eax
 
@@ -104,9 +98,9 @@ else1:
 
 	subl $4, %esp
 	popl %eax
-	movl %eax, -40(%ebp)
+	movl %eax, -4(%ebp)
 
-	pushl -40(%ebp)
+	pushl -4(%ebp)
 
 	pushl $5
 
@@ -124,7 +118,7 @@ cond_final3:
 	cmpl &0,%eax
 	je else2
 
-	pushl -44(%ebp)
+	pushl -8(%ebp)
 	pushl $LC3
 	call printf
 	addl $8, %esp
@@ -134,22 +128,22 @@ else2:
 if_else_final2:
 if_else_final1:
 
-	pushl -44(%ebp)
+	pushl -8(%ebp)
 	pushl $LC4
 	call printf
 	addl $8, %esp
 
-	pushl -44(%ebp)
+	pushl -8(%ebp)
 	call fun
 	addl $4 ,%esp
 	pushl %eax
 
 	subl $4, %esp
 	popl %eax
-	movl %eax, -44(%ebp)
+	movl %eax, -8(%ebp)
 
-	pushl -48(%ebp)
-	pushl -44(%ebp)
+	pushl -12(%ebp)
+	pushl -8(%ebp)
 	pushl $LC5
 	call printf
 	addl $12, %esp

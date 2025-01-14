@@ -1,9 +1,5 @@
 	.file prueba.c
 	.section .rodata
-.LC1:
-	"%d\n"
-.LC2:
-	"var %d still exists.\n"
 
 	section .data
 
